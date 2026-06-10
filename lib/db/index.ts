@@ -8,7 +8,12 @@ const globalForDb = globalThis as unknown as {
 
 export const pool =
   globalForDb.pool ??
-  new Pool({ connectionString: process.env.DATABASE_URL })
+  new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL?.includes("neon.tech")
+      ? { rejectUnauthorized: false }
+      : undefined,
+  })
 
 if (process.env.NODE_ENV !== "production") globalForDb.pool = pool
 
