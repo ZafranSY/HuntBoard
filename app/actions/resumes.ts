@@ -5,20 +5,21 @@ import { resumes } from "@/lib/db/schema"
 import { requireNamespaceId } from "@/lib/auth/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { cache } from "react"
 
 function toStr(v: FormDataEntryValue | null): string | null {
   const s = String(v ?? "").trim()
   return s ? s : null
 }
 
-export async function getResumes() {
+export const getResumes = cache(async () => {
   const namespaceId = await requireNamespaceId()
   return db
     .select()
     .from(resumes)
     .where(eq(resumes.namespaceId, namespaceId))
     .orderBy(desc(resumes.updatedAt))
-}
+})
 
 export async function createResume(formData: FormData) {
   const namespaceId = await requireNamespaceId()

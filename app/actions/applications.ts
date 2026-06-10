@@ -5,6 +5,7 @@ import { applications } from "@/lib/db/schema"
 import { requireNamespaceId } from "@/lib/auth/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { cache } from "react"
 
 function toInt(v: FormDataEntryValue | null): number | null {
   const s = String(v ?? "").trim()
@@ -18,14 +19,14 @@ function toStr(v: FormDataEntryValue | null): string | null {
   return s ? s : null
 }
 
-export async function getApplications() {
+export const getApplications = cache(async () => {
   const namespaceId = await requireNamespaceId()
   return db
     .select()
     .from(applications)
     .where(eq(applications.namespaceId, namespaceId))
     .orderBy(desc(applications.updatedAt))
-}
+})
 
 export async function createApplication(formData: FormData) {
   const namespaceId = await requireNamespaceId()

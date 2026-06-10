@@ -5,18 +5,19 @@ import { wishlist, applications } from "@/lib/db/schema"
 import { requireNamespaceId } from "@/lib/auth/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { cache } from "react"
 
 function toStr(v: FormDataEntryValue | null): string | null {
   const s = String(v ?? "").trim()
   return s ? s : null
 }
 
-export async function getWishlistItems() {
+export const getWishlistItems = cache(async () => {
   return db
     .select()
     .from(wishlist)
     .orderBy(desc(wishlist.createdAt))
-}
+})
 
 export async function createWishlistItem(formData: FormData) {
   const namespaceId = await requireNamespaceId()
