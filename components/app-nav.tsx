@@ -23,8 +23,8 @@ export function AppNav({ displayName }: { displayName: string }) {
         <div className="flex items-center gap-3">
           <div className="relative h-8 w-8 shrink-0">
             <Image
-              src="/ciptacraft-logo-black.png"
-              alt="Cipta Craft"
+              src="/apple-touch-icon.png"
+              alt="HuntBoard"
               fill
               sizes="32px"
               priority
@@ -32,7 +32,7 @@ export function AppNav({ displayName }: { displayName: string }) {
             />
             <Image
               src="/apple-touch-icon.png"
-              alt="Cipta Craft"
+              alt="HuntBoard"
               fill
               sizes="32px"
               priority

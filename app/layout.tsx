@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Cipta Craft Solutions — HuntBoard Dashboard',
+  title: 'HuntBoard Dashboard',
   description:
     'A professional, results-oriented job application tracker. Manage your pipeline, resume versions, and application details.',
   generator: 'v0.app',

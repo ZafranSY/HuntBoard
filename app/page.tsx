@@ -41,8 +41,8 @@ export default async function HomePage() {
               className="object-contain block dark:hidden"
             />
             <Image
-              src="/ciptacraft-logo-white.png"
-              alt="Cipta Craft"
+              src="/apple-touch-icon.png"
+              alt="HuntBoard"
               fill
               sizes="36px"
               priority

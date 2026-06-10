@@ -5,6 +5,7 @@ import type { Application, Resume } from "@/lib/db/schema"
 import { PipelineBoard } from "@/components/pipeline-board"
 import { ApplicationsTable } from "@/components/applications-table"
 import { ApplicationFormDialog } from "@/components/application-form-dialog"
+import { ImportJsonDialog } from "@/components/import-json-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -16,6 +17,7 @@ import {
   Send,
   CalendarClock,
   Trophy,
+  FileCode,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -97,6 +99,15 @@ export function DashboardClient({
               <span className="hidden sm:inline">Table</span>
             </Button>
           </div>
+
+          <ImportJsonDialog
+            trigger={
+              <Button variant="outline" size="sm" className="h-9">
+                <FileCode className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Import JSON</span>
+              </Button>
+            }
+          />
 
           <ApplicationFormDialog
             resumes={resumes}
