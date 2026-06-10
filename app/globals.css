@@ -63,89 +63,94 @@
 }
 
 :root {
-  --background: #FFFFFF;
-  --foreground: #0A0A0A;
-  --card: #FFFFFF;
-  --card-foreground: #1A1A1A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0A0A0A;
+  --themed-background: #EAE8E4;
+  --themed-foreground: #2D2D2D;
+
+  --background: var(--themed-background);
+  --foreground: var(--themed-foreground);
+  --card: var(--themed-background);
+  --card-foreground: var(--themed-foreground);
+  --popover: var(--themed-background);
+  --popover-foreground: var(--themed-foreground);
   
-  /* Primary Cipta Black */
-  --primary: #0A0A0A;
-  --primary-foreground: #FFFFFF;
+  /* Primary carbon */
+  --primary: var(--themed-foreground);
+  --primary-foreground: var(--themed-background);
   
   /* Supporting neutrals */
-  --secondary: #F4F4F4;
-  --secondary-foreground: #1A1A1A;
-  --muted: #F4F4F4;
-  --muted-foreground: #6B6B6B;
+  --secondary: #D4D2CD;
+  --secondary-foreground: var(--themed-foreground);
+  --muted: #D4D2CD;
+  --muted-foreground: rgba(45, 45, 45, 0.6);
   
-  /* Accent is Light Grey hover by default, with Signal Red focus rings/special CTA */
-  --accent: #F4F4F4;
-  --accent-foreground: #0A0A0A;
+  /* Accent is light dot overlay hover */
+  --accent: rgba(45, 45, 45, 0.08);
+  --accent-foreground: var(--themed-foreground);
   --destructive: #DC2626;
   
-  --border: #E0E0E0;
-  --input: #E0E0E0;
-  --ring: #E82D2D; /* Focus ring points to brand Signal Red */
+  /* Blueprint Grid Lines */
+  --border: rgba(45, 45, 45, 0.15);
+  --input: rgba(45, 45, 45, 0.15);
+  --ring: #E82D2D; /* Signal Red */
   
-  --chart-1: #0A0A0A;
+  --chart-1: var(--themed-foreground);
   --chart-2: #E82D2D;
   --chart-3: #16A34A;
   --chart-4: #D97706;
-  --chart-5: #6B6B6B;
+  --chart-5: rgba(45, 45, 45, 0.6);
   
   --radius: 0.5rem;
   
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #0A0A0A;
-  --sidebar-primary: #0A0A0A;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F4F4F4;
-  --sidebar-accent-foreground: #0A0A0A;
-  --sidebar-border: #E0E0E0;
+  --sidebar: var(--themed-background);
+  --sidebar-foreground: var(--themed-foreground);
+  --sidebar-primary: var(--themed-foreground);
+  --sidebar-primary-foreground: var(--themed-background);
+  --sidebar-accent: rgba(45, 45, 45, 0.08);
+  --sidebar-accent-foreground: var(--themed-foreground);
+  --sidebar-border: rgba(45, 45, 45, 0.15);
   --sidebar-ring: #E82D2D;
 }
 
 .dark {
+  --themed-background: #EAE8E4;
+  --themed-foreground: #2D2D2D;
+
   --background: #0A0A0A;
-  --foreground: #FFFFFF;
-  --card: #1A1A1A;
-  --card-foreground: #FFFFFF;
-  --popover: #1A1A1A;
-  --popover-foreground: #FFFFFF;
+  --foreground: #EAE8E4;
+  --card: #141413;
+  --card-foreground: #EAE8E4;
+  --popover: #141413;
+  --popover-foreground: #EAE8E4;
   
-  /* Primary Cipta Black inverted in dark mode to White */
-  --primary: #FFFFFF;
+  --primary: #EAE8E4;
   --primary-foreground: #0A0A0A;
   
-  /* Dark neutrals */
-  --secondary: #1A1A1A;
-  --secondary-foreground: #FFFFFF;
-  --muted: #1A1A1A;
-  --muted-foreground: #6B6B6B;
+  --secondary: #1F1E1C;
+  --secondary-foreground: #EAE8E4;
+  --muted: #1F1E1C;
+  --muted-foreground: rgba(234, 232, 228, 0.6);
   
-  --accent: #1A1A1A;
-  --accent-foreground: #FFFFFF;
+  --accent: rgba(234, 232, 228, 0.08);
+  --accent-foreground: #EAE8E4;
   --destructive: #DC2626;
   
-  --border: #2C2C2C;
-  --input: #2C2C2C;
+  --border: rgba(234, 232, 228, 0.15);
+  --input: rgba(234, 232, 228, 0.15);
   --ring: #E82D2D;
   
-  --chart-1: #FFFFFF;
+  --chart-1: #EAE8E4;
   --chart-2: #E82D2D;
   --chart-3: #16A34A;
   --chart-4: #D97706;
-  --chart-5: #6B6B6B;
+  --chart-5: rgba(234, 232, 228, 0.6);
   
-  --sidebar: #1A1A1A;
-  --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #FFFFFF;
+  --sidebar: #141413;
+  --sidebar-foreground: #EAE8E4;
+  --sidebar-primary: #EAE8E4;
   --sidebar-primary-foreground: #0A0A0A;
-  --sidebar-accent: #1A1A1A;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #2C2C2C;
+  --sidebar-accent: rgba(234, 232, 228, 0.08);
+  --sidebar-accent-foreground: #EAE8E4;
+  --sidebar-border: rgba(234, 232, 228, 0.15);
   --sidebar-ring: #E82D2D;
 }
 
@@ -163,4 +168,59 @@
     line-height: 1.1;
   }
 }
+
+/* Custom CSS classes for Blueprint Design System */
+.blueprint-grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0.12;
+  will-change: transform;
+  contain: strict;
+}
+.blueprint-grid-cols {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  height: 100%;
+  width: 100%;
+}
+.blueprint-grid-col-line {
+  border-right: 1px solid var(--border);
+  height: 100%;
+}
+.blueprint-grid-rows {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  height: 100%;
+  width: 100%;
+}
+.blueprint-grid-row-line {
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+}
+
+.dot-matrix-mesh {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(45, 45, 45, 0.08) 1px, transparent 1px);
+  background-size: 16px 16px;
+  z-index: 0;
+}
+.dark .dot-matrix-mesh {
+  background-image: radial-gradient(rgba(234, 232, 228, 0.08) 1px, transparent 1px);
+}
+
+.blueprint-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--muted-foreground);
+}
+
 

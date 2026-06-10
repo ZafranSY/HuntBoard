@@ -129,7 +129,7 @@ export function ImportJsonDialog({ trigger }: { trigger: React.ReactNode }) {
 
         <div className="grid gap-6 py-2">
           {/* Example / Formatting Section */}
-          <div className="rounded-lg border border-border bg-muted/40 p-4">
+          <div className="rounded-none border border-border bg-accent/20 p-4">
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Required JSON Format
@@ -138,17 +138,17 @@ export function ImportJsonDialog({ trigger }: { trigger: React.ReactNode }) {
                 variant="ghost"
                 size="sm"
                 onClick={handleCopy}
-                className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground rounded-none border border-transparent hover:border-border"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
                 {copied ? "Copied" : "Copy Example"}
               </Button>
             </div>
-            <pre className="text-xs font-mono bg-card/60 p-3 rounded border border-border/60 overflow-x-auto text-foreground max-h-[160px] scrollbar-thin">
+            <pre className="text-xs font-mono bg-card/60 p-3 rounded-none border border-border/60 overflow-x-auto text-foreground max-h-[160px] scrollbar-thin">
               {JSON_EXAMPLE}
             </pre>
             <p className="mt-2 text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">Note:</span> <code className="text-primary">company</code> and <code className="text-primary">role</code> are required for each entry. Optional fields: <code className="text-muted-foreground">location, workMode, status, priority, salaryMin, salaryMax, link, source, notes, appliedDate, nextAction, nextActionDate</code>.
+              <span className="font-semibold text-foreground">Note:</span> <code className="text-primary font-mono">company</code> and <code className="text-primary font-mono">role</code> are required for each entry. Optional fields: <code className="text-muted-foreground">location, workMode, status, priority, salaryMin, salaryMax, link, source, notes, appliedDate, nextAction, nextActionDate</code>.
             </p>
           </div>
 
@@ -179,10 +179,10 @@ export function ImportJsonDialog({ trigger }: { trigger: React.ReactNode }) {
                 value={jsonText}
                 onChange={handleTextChange}
                 placeholder="[&#10;  {&#10;    &quot;company&quot;: &quot;Acme Corp&quot;,&#10;    &quot;role&quot;: &quot;Frontend Engineer&quot;&#10;  }&#10;]"
-                className="min-h-[220px] font-mono text-sm border-border bg-card focus-visible:ring-primary focus-visible:ring-1"
+                className="min-h-[220px] font-mono text-sm border-border bg-card focus-visible:ring-primary focus-visible:ring-1 rounded-none"
               />
               {errorMsg && (
-                <p className="text-xs text-destructive flex items-start gap-1 mt-1 bg-destructive/10 p-2.5 rounded border border-destructive/20 font-mono">
+                <p className="text-xs text-destructive flex items-start gap-1 mt-1 bg-destructive/10 p-2.5 rounded-none border border-destructive/20 font-mono">
                   <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </p>

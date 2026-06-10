@@ -113,7 +113,7 @@ export function ResumeFormDialog({
               placeholder="What's different about this version..."
             />
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
+          <div className="flex items-center justify-between rounded-none border border-border bg-accent/20 px-3 py-2.5">
             <div className="flex flex-col">
               <Label htmlFor="isActive">Active resume</Label>
               <span className="text-xs text-muted-foreground">

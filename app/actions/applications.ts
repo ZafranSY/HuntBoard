@@ -33,13 +33,19 @@ export async function createApplication(formData: FormData) {
   const role = toStr(formData.get("role"))
   if (!company || !role) throw new Error("Company and role are required.")
 
+  const status = toStr(formData.get("status")) ?? "wishlist"
+  let appliedDate = toStr(formData.get("appliedDate"))
+  if (status !== "wishlist" && !appliedDate) {
+    appliedDate = new Date().toISOString().split("T")[0]
+  }
+
   await db.insert(applications).values({
     namespaceId,
     company,
     role,
     location: toStr(formData.get("location")),
     workMode: toStr(formData.get("workMode")),
-    status: toStr(formData.get("status")) ?? "wishlist",
+    status,
     priority: toStr(formData.get("priority")) ?? "medium",
     salaryMin: toInt(formData.get("salaryMin")),
     salaryMax: toInt(formData.get("salaryMax")),
@@ -47,16 +53,36 @@ export async function createApplication(formData: FormData) {
     source: toStr(formData.get("source")),
     resumeId: toInt(formData.get("resumeId")),
     notes: toStr(formData.get("notes")),
-    appliedDate: toStr(formData.get("appliedDate")),
+    appliedDate,
     nextAction: toStr(formData.get("nextAction")),
     nextActionDate: toStr(formData.get("nextActionDate")),
+    category: toStr(formData.get("category")),
+    wishlistId: toInt(formData.get("wishlistId")),
   })
 
   revalidatePath("/dashboard")
+  revalidatePath("/wishlist")
 }
 
 export async function updateApplication(id: number, formData: FormData) {
   const namespaceId = await requireNamespaceId()
+  const status = toStr(formData.get("status")) ?? "wishlist"
+
+  const [app] = await db
+    .select()
+    .from(applications)
+    .where(
+      and(eq(applications.id, id), eq(applications.namespaceId, namespaceId)),
+    )
+    .limit(1)
+
+  if (!app) throw new Error("Application not found")
+
+  let appliedDate = toStr(formData.get("appliedDate"))
+  if (status !== "wishlist" && !appliedDate && !app.appliedDate) {
+    appliedDate = new Date().toISOString().split("T")[0]
+  }
+
   await db
     .update(applications)
     .set({
@@ -64,7 +90,7 @@ export async function updateApplication(id: number, formData: FormData) {
       role: toStr(formData.get("role")) ?? undefined,
       location: toStr(formData.get("location")),
       workMode: toStr(formData.get("workMode")),
-      status: toStr(formData.get("status")) ?? "wishlist",
+      status,
       priority: toStr(formData.get("priority")) ?? "medium",
       salaryMin: toInt(formData.get("salaryMin")),
       salaryMax: toInt(formData.get("salaryMax")),
@@ -72,9 +98,11 @@ export async function updateApplication(id: number, formData: FormData) {
       source: toStr(formData.get("source")),
       resumeId: toInt(formData.get("resumeId")),
       notes: toStr(formData.get("notes")),
-      appliedDate: toStr(formData.get("appliedDate")),
+      appliedDate,
       nextAction: toStr(formData.get("nextAction")),
       nextActionDate: toStr(formData.get("nextActionDate")),
+      category: toStr(formData.get("category")),
+      wishlistId: toInt(formData.get("wishlistId")),
       updatedAt: new Date(),
     })
     .where(
@@ -82,17 +110,39 @@ export async function updateApplication(id: number, formData: FormData) {
     )
 
   revalidatePath("/dashboard")
+  revalidatePath("/wishlist")
 }
 
 export async function updateApplicationStatus(id: number, status: string) {
   const namespaceId = await requireNamespaceId()
+
+  const [app] = await db
+    .select()
+    .from(applications)
+    .where(
+      and(eq(applications.id, id), eq(applications.namespaceId, namespaceId)),
+    )
+    .limit(1)
+
+  if (!app) throw new Error("Application not found")
+
+  const updates: Partial<typeof applications.$inferInsert> = {
+    status,
+    updatedAt: new Date(),
+  }
+
+  if (status !== "wishlist" && !app.appliedDate) {
+    updates.appliedDate = new Date().toISOString().split("T")[0]
+  }
+
   await db
     .update(applications)
-    .set({ status, updatedAt: new Date() })
+    .set(updates)
     .where(
       and(eq(applications.id, id), eq(applications.namespaceId, namespaceId)),
     )
   revalidatePath("/dashboard")
+  revalidatePath("/wishlist")
 }
 
 export async function deleteApplication(id: number) {
@@ -103,6 +153,7 @@ export async function deleteApplication(id: number) {
       and(eq(applications.id, id), eq(applications.namespaceId, namespaceId)),
     )
   revalidatePath("/dashboard")
+  revalidatePath("/wishlist")
 }
 
 export async function importApplicationsFromJson(jsonText: string) {

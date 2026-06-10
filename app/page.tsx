@@ -58,29 +58,29 @@ export default async function HomePage() {
 
       <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:py-20">
         <div className="flex flex-col gap-6">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-chart-3" />
+          <span className="inline-flex w-fit items-center gap-2 rounded-none border border-border/80 bg-accent/40 px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+            <span className="h-2 w-2 rounded-none bg-chart-3" />
             Track your job hunt with friends
           </span>
-          <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+          <h1 className="text-balance text-4xl font-extrabold leading-none tracking-tight sm:text-5xl uppercase font-heading">
             Your job hunt,{" "}
-            <span className="text-primary">organised.</span>
+            <span className="text-primary font-black">organised.</span>
           </h1>
-          <p className="max-w-md text-pretty text-lg leading-relaxed text-muted-foreground">
+          <p className="max-w-md text-pretty text-sm leading-relaxed text-muted-foreground">
             Build your own board. Track every application from wishlist to
             offer. Version your resumes. Share the journey with friends — each
             with their own private board.
           </p>
 
           <div className="flex flex-col gap-4">
-            {FEATURES.map((f) => (
+            {FEATURES.map((f, idx) => (
               <div key={f.title} className="flex items-start gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                  <f.icon className="h-4 w-4" />
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-border bg-accent/35 text-foreground font-mono text-xs">
+                  0{idx + 1}
                 </span>
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold">{f.title}</span>
-                  <span className="text-sm text-muted-foreground">{f.body}</span>
+                  <span className="text-sm font-bold uppercase tracking-tight">{f.title}</span>
+                  <span className="text-xs text-muted-foreground">{f.body}</span>
                 </div>
               </div>
             ))}

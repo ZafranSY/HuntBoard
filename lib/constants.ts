@@ -6,16 +6,36 @@ export const STATUS_META: Record<
 > = {
   wishlist: {
     label: "Wishlist",
-    dot: "bg-muted-foreground",
-    badge: "bg-muted text-muted-foreground",
+    dot: "bg-chart-5",
+    badge: "bg-chart-5/15 text-chart-5",
   },
   applied: {
     label: "Applied",
     dot: "bg-chart-2",
     badge: "bg-chart-2/15 text-chart-2",
   },
+  viewed: {
+    label: "Viewed",
+    dot: "bg-chart-1",
+    badge: "bg-chart-1/15 text-chart-1",
+  },
   interviewing: {
     label: "Interviewing",
+    dot: "bg-chart-4",
+    badge: "bg-chart-4/15 text-chart-4",
+  },
+  interview: {
+    label: "Interview",
+    dot: "bg-chart-4",
+    badge: "bg-chart-4/15 text-chart-4",
+  },
+  technical_test: {
+    label: "Technical Test",
+    dot: "bg-chart-4",
+    badge: "bg-chart-4/15 text-chart-4",
+  },
+  final_interview: {
+    label: "Final Interview",
     dot: "bg-chart-4",
     badge: "bg-chart-4/15 text-chart-4",
   },
@@ -24,8 +44,18 @@ export const STATUS_META: Record<
     dot: "bg-chart-3",
     badge: "bg-chart-3/15 text-chart-3",
   },
+  accepted: {
+    label: "Accepted",
+    dot: "bg-chart-3",
+    badge: "bg-chart-3/15 text-chart-3",
+  },
   rejected: {
     label: "Rejected",
+    dot: "bg-chart-5",
+    badge: "bg-chart-5/15 text-chart-5",
+  },
+  ghosted: {
+    label: "Ghosted",
     dot: "bg-chart-5",
     badge: "bg-chart-5/15 text-chart-5",
   },

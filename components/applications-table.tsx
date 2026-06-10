@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ExternalLink, MoreVertical, Pencil, Trash2 } from "lucide-react"
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -34,7 +34,7 @@ export function ApplicationsTable({
   resumes: Resume[]
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
+    <div className="overflow-hidden rounded-none border border-border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -97,6 +97,7 @@ export function ApplicationsTable({
 
 function RowActions({ app, resumes }: { app: Application; resumes: Resume[] }) {
   const [pending, startTransition] = useTransition()
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   function onDelete() {
     startTransition(async () => {
@@ -110,53 +111,56 @@ function RowActions({ app, resumes }: { app: Application; resumes: Resume[] }) {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            disabled={pending}
-            aria-label="Row actions"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end">
-        <ApplicationFormDialog
-          resumes={resumes}
-          application={app}
-          trigger={
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              disabled={pending}
+              aria-label="Row actions"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
           }
         />
-        {app.link && (
-          <DropdownMenuItem>
-            <a
-              href={app.link}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Open posting
-            </a>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit
           </DropdownMenuItem>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onSelect={onDelete}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {app.link && (
+            <DropdownMenuItem>
+              <a
+                href={app.link}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open posting
+              </a>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <ApplicationFormDialog
+        resumes={resumes}
+        application={app}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
+    </>
   )
 }

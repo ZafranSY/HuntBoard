@@ -6,12 +6,12 @@ import { PipelineBoard } from "@/components/pipeline-board"
 import { ApplicationsTable } from "@/components/applications-table"
 import { ApplicationFormDialog } from "@/components/application-form-dialog"
 import { ImportJsonDialog } from "@/components/import-json-dialog"
+import MonksButton from "@/components/MonksButton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   LayoutGrid,
   List,
-  Plus,
   Search,
   Briefcase,
   Send,
@@ -56,7 +56,9 @@ export function DashboardClient({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Industrial grid chassis stat layout */}
+      <div className="grid grid-cols-2 gap-px bg-border border border-border rounded-none relative overflow-hidden lg:grid-cols-4">
+        <div className="absolute inset-0 dot-matrix-mesh opacity-10 pointer-events-none" />
         <StatCard icon={Briefcase} label="Total roles" value={stats.total} />
         <StatCard icon={Send} label="Active" value={stats.active} />
         <StatCard
@@ -79,43 +81,44 @@ export function DashboardClient({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg border border-border p-0.5">
+          {/* View Toggle */}
+          <div className="flex items-center rounded-none border border-border p-0.5 bg-muted/20">
             <Button
-              variant={view === "board" ? "secondary" : "ghost"}
+              variant="ghost"
               size="sm"
-              className="h-8"
+              className={cn(
+                "h-8 font-mono text-[10px] uppercase tracking-wider rounded-none",
+                view === "board" ? "bg-background text-foreground shadow-xs font-bold" : "text-muted-foreground hover:bg-transparent"
+              )}
               onClick={() => setView("board")}
             >
-              <LayoutGrid className="h-4 w-4 sm:mr-1.5" />
+              <LayoutGrid className="h-3.5 w-3.5 sm:mr-1.5" />
               <span className="hidden sm:inline">Board</span>
             </Button>
             <Button
-              variant={view === "table" ? "secondary" : "ghost"}
+              variant="ghost"
               size="sm"
-              className="h-8"
+              className={cn(
+                "h-8 font-mono text-[10px] uppercase tracking-wider rounded-none",
+                view === "table" ? "bg-background text-foreground shadow-xs font-bold" : "text-muted-foreground hover:bg-transparent"
+              )}
               onClick={() => setView("table")}
             >
-              <List className="h-4 w-4 sm:mr-1.5" />
+              <List className="h-3.5 w-3.5 sm:mr-1.5" />
               <span className="hidden sm:inline">Table</span>
             </Button>
           </div>
 
           <ImportJsonDialog
             trigger={
-              <Button variant="outline" size="sm" className="h-9">
-                <FileCode className="h-4 w-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Import JSON</span>
-              </Button>
+              <MonksButton label="Import JSON" variant="outline" className="h-8" />
             }
           />
 
           <ApplicationFormDialog
             resumes={resumes}
             trigger={
-              <Button size="sm" className="h-9">
-                <Plus className="h-4 w-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Add role</span>
-              </Button>
+              <MonksButton label="Add role" variant="primary" className="h-8" />
             }
           />
         </div>
@@ -142,13 +145,13 @@ function StatCard({
   value: number
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
-      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-        <Icon className="h-5 w-5" />
+    <div className="flex items-center gap-4 bg-card p-5 relative overflow-hidden group">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none border border-border bg-muted/30 text-foreground transition-colors duration-200 group-hover:bg-[#E82D2D]/10 group-hover:border-[#E82D2D]/30">
+        <Icon className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
       </span>
       <div className="flex flex-col">
-        <span className="text-2xl font-bold leading-none">{value}</span>
-        <span className="text-xs text-muted-foreground">{label}</span>
+        <span className="text-3xl font-heading font-black tracking-tight leading-none text-foreground">{value}</span>
+        <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mt-1">{label}</span>
       </div>
     </div>
   )
@@ -162,12 +165,13 @@ function EmptyState({
   hasApplications: boolean
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
-      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
-        <Briefcase className="h-6 w-6" />
+    <div className="flex flex-col items-center justify-center gap-4 rounded-none border border-dashed border-border bg-card/50 px-6 py-16 text-center relative overflow-hidden">
+      <div className="absolute inset-0 dot-matrix-mesh opacity-10 pointer-events-none" />
+      <span className="flex h-12 w-12 items-center justify-center rounded-none border border-border bg-muted/30 text-foreground">
+        <Briefcase className="h-5 w-5" />
       </span>
-      <div className="flex flex-col gap-1">
-        <h3 className="text-base font-semibold">
+      <div className="flex flex-col gap-1 relative z-10">
+        <h3 className="text-base font-bold uppercase tracking-wide font-heading">
           {hasApplications ? "No matches found" : "Your board is empty"}
         </h3>
         <p className="max-w-sm text-pretty text-sm text-muted-foreground">
@@ -180,13 +184,11 @@ function EmptyState({
         <ApplicationFormDialog
           resumes={resumes}
           trigger={
-            <Button>
-              <Plus className="mr-1.5 h-4 w-4" />
-              Add your first role
-            </Button>
+            <MonksButton label="Add your first role" variant="primary" />
           }
         />
       )}
     </div>
   )
 }
+

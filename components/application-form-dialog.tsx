@@ -33,11 +33,24 @@ import { toast } from "sonner"
 interface Props {
   resumes: Resume[]
   application?: Application
-  trigger: React.ReactNode
+  trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function ApplicationFormDialog({ resumes, application, trigger }: Props) {
-  const [open, setOpen] = useState(false)
+export function ApplicationFormDialog({
+  resumes,
+  application,
+  trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: Props) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const setOpen =
+    controlledOnOpenChange !== undefined
+      ? controlledOnOpenChange
+      : setInternalOpen
   const [pending, startTransition] = useTransition()
   const formRef = useRef<HTMLFormElement>(null)
   const isEdit = Boolean(application)
@@ -64,7 +77,7 @@ export function ApplicationFormDialog({ resumes, application, trigger }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div onClick={() => setOpen(true)}>{trigger}</div>
+      {trigger && <div onClick={() => setOpen(true)}>{trigger}</div>}
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
@@ -202,7 +215,23 @@ export function ApplicationFormDialog({ resumes, application, trigger }: Props) 
                 </SelectContent>
               </Select>
             </Field>
+            <Field label="Category / Group" htmlFor="category">
+              <Input
+                id="category"
+                name="category"
+                defaultValue={application?.category ?? ""}
+                placeholder="e.g. alvis-wish, frontend"
+              />
+            </Field>
           </div>
+
+          {application?.wishlistId && (
+            <input
+              type="hidden"
+              name="wishlistId"
+              value={application.wishlistId}
+            />
+          )}
 
           <Field label="Job link" htmlFor="link">
             <Input

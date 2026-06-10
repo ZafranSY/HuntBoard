@@ -28,11 +28,12 @@ export function AuthCard() {
   const [tab, setTab] = useState("login")
 
   return (
-    <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="login">Sign in</TabsTrigger>
-          <TabsTrigger value="signup">Create board</TabsTrigger>
+    <div className="w-full rounded-none border border-border bg-card p-6 shadow-none sm:p-8 relative overflow-hidden group">
+      <div className="absolute inset-0 dot-matrix-mesh opacity-[0.03] pointer-events-none" />
+      <Tabs value={tab} onValueChange={setTab} className="relative z-10">
+        <TabsList className="grid w-full grid-cols-2 rounded-none border border-border bg-accent/30 p-0.5">
+          <TabsTrigger value="login" className="rounded-none font-mono text-xs uppercase tracking-wider">Sign in</TabsTrigger>
+          <TabsTrigger value="signup" className="rounded-none font-mono text-xs uppercase tracking-wider">Create board</TabsTrigger>
         </TabsList>
 
         <TabsContent value="login" className="mt-6">
@@ -135,7 +136,7 @@ export function AuthCard() {
 
 function FormError({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+    <div className="flex items-center gap-2 rounded-none border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs font-mono text-destructive">
       <AlertCircle className="h-4 w-4 shrink-0" />
       <span>{message}</span>
     </div>
