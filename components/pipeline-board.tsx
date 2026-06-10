@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -141,7 +142,7 @@ function ApplicationCard({
     <div
       draggable
       onDragStart={(e) =>
-        e.dataTransfer.setData("text/plain", String(app.id))
+          e.dataTransfer.setData("text/plain", String(app.id))
       }
       className={cn(
         "group flex flex-col gap-2 rounded-lg border border-border bg-card p-3 shadow-sm",
@@ -159,50 +160,54 @@ function ApplicationCard({
           </div>
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0"
-              aria-label="Card actions"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                aria-label="Card actions"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            }
+          />
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <ApplicationFormDialog
-              resumes={resumes}
-              application={app}
-              trigger={
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <ApplicationFormDialog
+                resumes={resumes}
+                application={app}
+                trigger={
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                }
+              />
+              {app.link && (
+                <DropdownMenuItem>
+                  <a
+                    href={app.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open posting
+                  </a>
                 </DropdownMenuItem>
-              }
-            />
-            {app.link && (
-              <DropdownMenuItem>
-                <a
-                  href={app.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Open posting
-                </a>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onSelect={onDelete}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
               </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onSelect={onDelete}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

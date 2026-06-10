@@ -124,17 +124,19 @@ function ResumeCard({
           </div>
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              disabled={pending}
-              aria-label="Resume actions"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                disabled={pending}
+                aria-label="Resume actions"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            }
+          />
           <DropdownMenuContent align="end">
             <ResumeFormDialog
               resume={resume}

@@ -111,17 +111,19 @@ function RowActions({ app, resumes }: { app: Application; resumes: Resume[] }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          disabled={pending}
-          aria-label="Row actions"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            disabled={pending}
+            aria-label="Row actions"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        }
+      />
       <DropdownMenuContent align="end">
         <ApplicationFormDialog
           resumes={resumes}

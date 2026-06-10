@@ -47,3 +47,6 @@ __v0_jsx-dev-runtime.ts
 *.zip
 *.tar.gz
 *.tgz
+
+# local data/imports
+data.json
