@@ -875,7 +875,7 @@ export function WishlistClient({
               <Textarea
                 value={jsonText}
                 onChange={(e) => setJsonText(e.target.value)}
-                placeholder={`[\n  {\n    "company": "Amazon",\n    "role": "Cloud Architect",\n    "location": "Remote",\n    "priority": "high",\n    "category": "Cloud"\n  }\n]`}
+                placeholder={`[\n  {\n    "company": "Amazon",\n    "role": "Cloud Architect",\n    "location": "Remote",\n    "priority": "high"\n  }\n]`}
                 rows={10}
                 className="font-mono text-xs rounded-none bg-background border-border text-foreground focus-visible:ring-foreground focus-visible:ring-1"
               />
@@ -885,7 +885,7 @@ export function WishlistClient({
               <span className="block text-[10px] font-bold uppercase mb-1">Expected Schema:</span>
               <ul className="list-disc pl-4 space-y-1 text-[10px] text-muted-foreground">
                 <li><code className="text-foreground">company</code> (Required)</li>
-                <li><code className="text-foreground">role</code>, <code className="text-foreground">location</code>, <code className="text-foreground">category</code>, <code className="text-foreground">link</code>, <code className="text-foreground">notes</code> (Optional)</li>
+                <li><code className="text-foreground">role</code>, <code className="text-foreground">location</code>, <code className="text-foreground">link</code>, <code className="text-foreground">notes</code> (Optional)</li>
                 <li><code className="text-foreground">priority</code>: &quot;low&quot; | &quot;medium&quot; | &quot;high&quot;</li>
               </ul>
             </div>

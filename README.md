@@ -110,7 +110,6 @@ You can batch import jobs directly into your **Wishlist** board by clicking the 
 ### Optional Fields
 - `role` (string): Job title / role. Also accepts `Role`, `title`, or `position`.
 - `location` (string): Job location. Also accepts `Location`.
-- `category` (string): Category grouping. Also accepts `Category`. Defaults to the currently active sidebar category filter if omitted.
 - `priority` (string): Options are `"low" | "medium" | "high"`. Defaults to `"medium"`. Also accepts `Priority`.
 - `link` (string): URL link to the job post. Also accepts `Link` or `url`.
 - `notes` (string): Any comments/notes. Also accepts `Notes`.
@@ -122,7 +121,6 @@ You can batch import jobs directly into your **Wishlist** board by clicking the 
     "company": "Netflix",
     "role": "Frontend Architect",
     "location": "Los Gatos, CA",
-    "category": "Streaming / Frontend",
     "priority": "high",
     "link": "https://netflix.com/jobs/123",
     "notes": "Need to brush up on canvas performance optimization."
@@ -130,8 +128,7 @@ You can batch import jobs directly into your **Wishlist** board by clicking the 
   {
     "company": "Linear",
     "role": "Product Engineer",
-    "priority": "medium",
-    "category": "Productivity Tools"
+    "priority": "medium"
   }
 ]
 ```
