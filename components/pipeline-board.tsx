@@ -171,73 +171,75 @@ function ApplicationCard({
     : ""
 
   return (
-    <div
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setData("text/plain", String(app.id))
-      }}
-      onClick={() => setIsEditDialogOpen(true)}
-      className={cn(
-        "group flex flex-col gap-1 rounded-none border border-border bg-card p-2 hover:border-foreground/30 hover:bg-muted/10 transition-colors relative cursor-pointer select-none",
-        pending && "opacity-50"
-      )}
-    >
-      <div className="absolute inset-0 dot-matrix-mesh opacity-[0.02] pointer-events-none" />
+    <>
+      <div
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData("text/plain", String(app.id))
+        }}
+        onClick={() => setIsEditDialogOpen(true)}
+        className={cn(
+          "group flex flex-col gap-1 rounded-none border border-border bg-card p-2 hover:border-foreground/30 hover:bg-muted/10 transition-colors relative cursor-pointer select-none",
+          pending && "opacity-50"
+        )}
+      >
+        <div className="absolute inset-0 dot-matrix-mesh opacity-[0.02] pointer-events-none" />
 
-      {/* Header Line: Company */}
-      <div className="flex items-center justify-between gap-1.5 relative z-10">
-        <span className="text-[11px] font-mono font-bold leading-tight uppercase tracking-tight text-foreground truncate flex-1">
-          {app.company}
-        </span>
-        
-        {/* Quick Actions Hover-only */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          {app.link && (
-            <a
-              href={app.link}
-              target="_blank"
-              rel="noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="h-4 w-4 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
-              title="Open posting"
+        {/* Header Line: Company */}
+        <div className="flex items-center justify-between gap-1.5 relative z-10">
+          <span className="text-[11px] font-mono font-bold leading-tight uppercase tracking-tight text-foreground truncate flex-1">
+            {app.company}
+          </span>
+          
+          {/* Quick Actions Hover-only */}
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            {app.link && (
+              <a
+                href={app.link}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="h-4 w-4 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                title="Open posting"
+              >
+                <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            )}
+            <button
+              onClick={onDelete}
+              className="h-4 w-4 inline-flex items-center justify-center text-muted-foreground hover:text-destructive"
+              title="Delete Application"
             >
-              <ExternalLink className="h-2.5 w-2.5" />
-            </a>
-          )}
-          <button
-            onClick={onDelete}
-            className="h-4 w-4 inline-flex items-center justify-center text-muted-foreground hover:text-destructive"
-            title="Delete Application"
-          >
-            <Trash2 className="h-2.5 w-2.5" />
-          </button>
+              <Trash2 className="h-2.5 w-2.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Role Title Line */}
+        <div className="text-[10px] font-mono text-muted-foreground truncate relative z-10">
+          {app.role}
+        </div>
+
+        {/* Footer Line: Salary / Date & Priority */}
+        <div className="flex justify-between items-center text-[9px] font-mono text-muted-foreground/40 mt-1 border-t border-border/20 pt-1 relative z-10">
+          <span>
+            {app.salaryMin || app.salaryMax 
+              ? formatSalary(app.salaryMin, app.salaryMax) 
+              : formattedDate}
+          </span>
+          <span className={cn("px-1 py-0 border text-[8px] uppercase shrink-0 font-bold tracking-tight", priority.badge)}>
+            {priority.label}
+          </span>
         </div>
       </div>
 
-      {/* Role Title Line */}
-      <div className="text-[10px] font-mono text-muted-foreground truncate relative z-10">
-        {app.role}
-      </div>
-
-      {/* Footer Line: Salary / Date & Priority */}
-      <div className="flex justify-between items-center text-[9px] font-mono text-muted-foreground/40 mt-1 border-t border-border/20 pt-1 relative z-10">
-        <span>
-          {app.salaryMin || app.salaryMax 
-            ? formatSalary(app.salaryMin, app.salaryMax) 
-            : formattedDate}
-        </span>
-        <span className={cn("px-1 py-0 border text-[8px] uppercase shrink-0 font-bold tracking-tight", priority.badge)}>
-          {priority.label}
-        </span>
-      </div>
-
-      {/* Edit Form Dialog */}
+      {/* Edit Form Dialog - rendered outside clickable div to prevent event bubbling/propagation */}
       <ApplicationFormDialog
         resumes={resumes}
         application={app}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
       />
-    </div>
+    </>
   )
 }
