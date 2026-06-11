@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { applications } from "@/lib/db/schema"
+import { applications, followUpLogs } from "@/lib/db/schema"
 import { requireNamespaceId } from "@/lib/auth/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
@@ -17,6 +17,10 @@ function toInt(v: FormDataEntryValue | null): number | null {
 function toStr(v: FormDataEntryValue | null): string | null {
   const s = String(v ?? "").trim()
   return s ? s : null
+}
+
+function toBool(v: FormDataEntryValue | null): boolean {
+  return v === "on" || v === "true"
 }
 
 export const getApplications = cache(async () => {
@@ -67,6 +71,17 @@ export async function createApplication(formData: FormData) {
     nextActionDate: toStr(formData.get("nextActionDate")),
     category: toStr(formData.get("category")),
     wishlistId: toInt(formData.get("wishlistId")),
+    jobDescriptionRaw: toStr(formData.get("jobDescriptionRaw")),
+    fitScore: toStr(formData.get("fitScore")),
+    resumeTailored: toBool(formData.get("resumeTailored")),
+    recruiterName: toStr(formData.get("recruiterName")),
+    recruiterEmail: toStr(formData.get("recruiterEmail")),
+    recruiterLinkedinUrl: toStr(formData.get("recruiterLinkedinUrl")),
+    portfolioUrl: toStr(formData.get("portfolioUrl")),
+    rejectionReason: toStr(formData.get("rejectionReason")),
+    screeningAnswered: toBool(formData.get("screeningAnswered")),
+    whyThisRole: toStr(formData.get("whyThisRole")),
+    companyResearchNotes: toStr(formData.get("companyResearchNotes")),
   })
 
   revalidatePath("/dashboard")
@@ -112,6 +127,17 @@ export async function updateApplication(id: number, formData: FormData) {
       nextActionDate: toStr(formData.get("nextActionDate")),
       category: toStr(formData.get("category")),
       wishlistId: toInt(formData.get("wishlistId")),
+      jobDescriptionRaw: toStr(formData.get("jobDescriptionRaw")),
+      fitScore: toStr(formData.get("fitScore")),
+      resumeTailored: toBool(formData.get("resumeTailored")),
+      recruiterName: toStr(formData.get("recruiterName")),
+      recruiterEmail: toStr(formData.get("recruiterEmail")),
+      recruiterLinkedinUrl: toStr(formData.get("recruiterLinkedinUrl")),
+      portfolioUrl: toStr(formData.get("portfolioUrl")),
+      rejectionReason: toStr(formData.get("rejectionReason")),
+      screeningAnswered: toBool(formData.get("screeningAnswered")),
+      whyThisRole: toStr(formData.get("whyThisRole")),
+      companyResearchNotes: toStr(formData.get("companyResearchNotes")),
       updatedAt: new Date(),
     })
     .where(
@@ -274,5 +300,114 @@ export async function importApplicationsFromJson(jsonText: string) {
 
   revalidatePath("/dashboard")
   return { success: true, count: parsedItems.length }
+}
+
+export async function addFollowUpLog(applicationId: number, formData: FormData) {
+  const namespaceId = await requireNamespaceId()
+  
+  const [app] = await db
+    .select()
+    .from(applications)
+    .where(
+      and(eq(applications.id, applicationId), eq(applications.namespaceId, namespaceId))
+    )
+    .limit(1)
+
+  if (!app) throw new Error("Application not found")
+
+  const method = toStr(formData.get("method"))
+  if (!method) throw new Error("Method is required")
+
+  const sentAtStr = toStr(formData.get("sentAt"))
+  const sentAt = sentAtStr ? new Date(sentAtStr) : new Date()
+
+  await db.insert(followUpLogs).values({
+    applicationId,
+    method,
+    sentAt,
+    content: toStr(formData.get("content")),
+    responseReceived: toBool(formData.get("responseReceived")),
+    responseNote: toStr(formData.get("responseNote")),
+  })
+
+  revalidatePath("/dashboard")
+}
+
+export async function deleteFollowUpLog(logId: number) {
+  const namespaceId = await requireNamespaceId()
+
+  const [log] = await db
+    .select({
+      id: followUpLogs.id,
+      applicationId: followUpLogs.applicationId,
+    })
+    .from(followUpLogs)
+    .innerJoin(applications, eq(followUpLogs.applicationId, applications.id))
+    .where(
+      and(eq(followUpLogs.id, logId), eq(applications.namespaceId, namespaceId))
+    )
+    .limit(1)
+
+  if (!log) throw new Error("Follow-up log not found or unauthorized")
+
+  await db.delete(followUpLogs).where(eq(followUpLogs.id, logId))
+
+  revalidatePath("/dashboard")
+}
+
+export async function toggleFollowUpResponse(
+  logId: number,
+  received: boolean,
+  responseNote?: string
+) {
+  const namespaceId = await requireNamespaceId()
+
+  const [log] = await db
+    .select({
+      id: followUpLogs.id,
+      applicationId: followUpLogs.applicationId,
+    })
+    .from(followUpLogs)
+    .innerJoin(applications, eq(followUpLogs.applicationId, applications.id))
+    .where(
+      and(eq(followUpLogs.id, logId), eq(applications.namespaceId, namespaceId))
+    )
+    .limit(1)
+
+  if (!log) throw new Error("Follow-up log not found or unauthorized")
+
+  await db
+    .update(followUpLogs)
+    .set({
+      responseReceived: received,
+      responseNote: responseNote ?? null,
+    })
+    .where(eq(followUpLogs.id, logId))
+
+  revalidatePath("/dashboard")
+}
+
+export async function getFollowUpLogs(applicationId: number) {
+  const namespaceId = await requireNamespaceId()
+
+  return db
+    .select({
+      id: followUpLogs.id,
+      applicationId: followUpLogs.applicationId,
+      method: followUpLogs.method,
+      sentAt: followUpLogs.sentAt,
+      content: followUpLogs.content,
+      responseReceived: followUpLogs.responseReceived,
+      responseNote: followUpLogs.responseNote,
+    })
+    .from(followUpLogs)
+    .innerJoin(applications, eq(followUpLogs.applicationId, applications.id))
+    .where(
+      and(
+        eq(followUpLogs.applicationId, applicationId),
+        eq(applications.namespaceId, namespaceId)
+      )
+    )
+    .orderBy(desc(followUpLogs.sentAt))
 }
 

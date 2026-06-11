@@ -76,6 +76,17 @@ export const applications = pgTable("applications", {
   nextActionDate: date("next_action_date"),
   category: text("category"),
   wishlistId: integer("wishlist_id").references(() => wishlist.id, { onDelete: "set null" }),
+  jobDescriptionRaw: text("job_description_raw"),
+  fitScore: text("fit_score"),
+  resumeTailored: boolean("resume_tailored").notNull().default(false),
+  recruiterName: text("recruiter_name"),
+  recruiterEmail: text("recruiter_email"),
+  recruiterLinkedinUrl: text("recruiter_linkedin_url"),
+  portfolioUrl: text("portfolio_url"),
+  rejectionReason: text("rejection_reason"),
+  screeningAnswered: boolean("screening_answered").notNull().default(false),
+  whyThisRole: text("why_this_role"),
+  companyResearchNotes: text("company_research_notes"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -84,10 +95,25 @@ export const applications = pgTable("applications", {
     .defaultNow(),
 })
 
+export const followUpLogs = pgTable("follow_up_logs", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id")
+    .notNull()
+    .references(() => applications.id, { onDelete: "cascade" }),
+  method: text("method").notNull(),
+  sentAt: timestamp("sent_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  content: text("content"),
+  responseReceived: boolean("response_received").notNull().default(false),
+  responseNote: text("response_note"),
+})
+
 export type Namespace = typeof namespaces.$inferSelect
 export type Resume = typeof resumes.$inferSelect
 export type Application = typeof applications.$inferSelect
 export type WishlistItem = typeof wishlist.$inferSelect
+export type FollowUpLog = typeof followUpLogs.$inferSelect
 
 export const APPLICATION_STATUSES = [
   "wishlist",

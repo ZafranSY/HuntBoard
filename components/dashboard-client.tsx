@@ -34,6 +34,19 @@ export function DashboardClient({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return applications
+    if (q === ":untailored") {
+      return applications.filter((a) => !a.resumeTailored && ["wishlist", "applied"].includes(a.status))
+    }
+    if (q === ":wishlist") {
+      return applications.filter((a) => a.status === "wishlist")
+    }
+    if (q === ":followup") {
+      return applications.filter((a) => {
+        if (!a.nextActionDate) return false
+        const today = new Date().toISOString().split("T")[0]
+        return a.nextActionDate <= today
+      })
+    }
     return applications.filter(
       (a) =>
         a.company.toLowerCase().includes(q) ||
@@ -41,6 +54,42 @@ export function DashboardClient({
         (a.location ?? "").toLowerCase().includes(q),
     )
   }, [applications, query])
+
+  const recommendations = useMemo(() => {
+    const list: { text: string; action: string; filterValue: string }[] = []
+    const today = new Date().toISOString().split("T")[0]
+    const pendingFollowUps = applications.filter(
+      (a) => a.nextActionDate && a.nextActionDate <= today
+    ).length
+    if (pendingFollowUps > 0) {
+      list.push({
+        text: `${pendingFollowUps} follow-up action${pendingFollowUps > 1 ? "s" : ""} pending action date`,
+        action: "Review list",
+        filterValue: ":followup",
+      })
+    }
+
+    const untailored = applications.filter(
+      (a) => !a.resumeTailored && ["wishlist", "applied"].includes(a.status)
+    ).length
+    if (untailored > 0) {
+      list.push({
+        text: `${untailored} active role${untailored > 1 ? "s do" : " does"} not have a tailored resume`,
+        action: "Tailor now",
+        filterValue: ":untailored",
+      })
+    }
+
+    const wishlisted = applications.filter((a) => a.status === "wishlist").length
+    if (wishlisted > 0) {
+      list.push({
+        text: `${wishlisted} role${wishlisted > 1 ? "s are" : " is"} in your wishlist ready to be applied`,
+        action: "Apply now",
+        filterValue: ":wishlist",
+      })
+    }
+    return list
+  }, [applications])
 
   const stats = useMemo(() => {
     const total = applications.length
@@ -68,6 +117,60 @@ export function DashboardClient({
         />
         <StatCard icon={Trophy} label="Offers" value={stats.offers} />
       </div>
+
+      {/* Weekly Focus Recommendation Widget */}
+      {recommendations.length > 0 && (
+        <div className="border border-border bg-card p-4 rounded-none relative overflow-hidden flex flex-col gap-3">
+          <div className="absolute inset-0 dot-matrix-mesh opacity-[0.03] pointer-events-none" />
+          <div className="flex items-center justify-between border-b border-border/20 pb-2 relative z-10">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#E82D2D] animate-pulse" />
+              [WEEKLY_FOCUS_RECOMMENDATIONS]
+            </span>
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold">
+              {recommendations.length} action item{recommendations.length > 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="grid gap-2 relative z-10">
+            {recommendations.map((rec, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2 border border-border/40 bg-background/50 hover:bg-background/80 transition-colors text-[11px] font-mono"
+              >
+                <span className="text-foreground/80 flex items-center gap-2">
+                  <span className="text-muted-foreground">0{idx + 1}.</span>
+                  {rec.text}
+                </span>
+                <button
+                  onClick={() => setQuery(rec.filterValue)}
+                  className="text-[10px] font-bold text-[#E82D2D] uppercase hover:underline text-left shrink-0"
+                >
+                  [{rec.action} →]
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {query.startsWith(":") && (
+        <div className="flex items-center justify-between gap-2 text-xs font-mono bg-muted/20 border border-border px-3 py-2">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground uppercase">Active Focus Filter:</span>
+            <span className="font-bold text-[#E82D2D] border border-[#E82D2D]/30 px-1 bg-[#E82D2D]/5">
+              {query === ":untailored" && "UNTUNED RESUMES"}
+              {query === ":wishlist" && "WISHLIST ROLES"}
+              {query === ":followup" && "PENDING FOLLOW-UPS"}
+            </span>
+          </div>
+          <button
+            onClick={() => setQuery("")}
+            className="text-[10px] text-muted-foreground hover:text-foreground font-bold font-mono"
+          >
+            [CLEAR_FILTER]
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative max-w-xs flex-1">

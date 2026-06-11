@@ -141,6 +141,27 @@ function Column({
   )
 }
 
+const REJECTION_TAGS: Record<string, string> = {
+  ats_filtered: "ATS",
+  no_response: "GHOST",
+  post_interview: "POST-INT",
+  overqualified: "OVERQUAL",
+  underqualified: "UNDERQUAL",
+  role_cancelled: "CANCELLED",
+  salary_mismatch: "SALARY",
+  other: "OTHER",
+}
+
+function getApplicationQualityScore(app: Application) {
+  let score = 0
+  if (app.jobDescriptionRaw && app.jobDescriptionRaw.trim()) score += 20
+  if (app.fitScore) score += 20
+  if (app.resumeTailored) score += 20
+  if (app.recruiterName?.trim() || app.recruiterEmail?.trim() || app.recruiterLinkedinUrl?.trim()) score += 20
+  if (app.portfolioUrl?.trim()) score += 20
+  return score
+}
+
 function ApplicationCard({
   app,
   resumes,
@@ -170,6 +191,16 @@ function ApplicationCard({
     ? new Date(app.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     : ""
 
+  const qualityScore = getApplicationQualityScore(app)
+  let qualityBorder = ""
+  if (qualityScore >= 70) {
+    qualityBorder = "border-l-[3px] border-l-emerald-500"
+  } else if (qualityScore >= 40) {
+    qualityBorder = "border-l-[3px] border-l-amber-500"
+  } else if (qualityScore > 0) {
+    qualityBorder = "border-l-[3px] border-l-rose-500"
+  }
+
   return (
     <>
       <div
@@ -180,6 +211,7 @@ function ApplicationCard({
         onClick={() => setIsEditDialogOpen(true)}
         className={cn(
           "group flex flex-col gap-1 rounded-none border border-border bg-card p-2 hover:border-foreground/30 hover:bg-muted/10 transition-colors relative cursor-pointer select-none",
+          qualityBorder,
           pending && "opacity-50"
         )}
       >
@@ -227,9 +259,16 @@ function ApplicationCard({
               ? formatSalary(app.salaryMin, app.salaryMax) 
               : formattedDate}
           </span>
-          <span className={cn("px-1 py-0 border text-[8px] uppercase shrink-0 font-bold tracking-tight", priority.badge)}>
-            {priority.label}
-          </span>
+          <div className="flex items-center gap-1 shrink-0">
+            {app.rejectionReason && REJECTION_TAGS[app.rejectionReason] && (
+              <span className="px-1 py-0 border border-destructive bg-destructive/10 text-destructive text-[8px] uppercase font-bold tracking-tight shrink-0">
+                {REJECTION_TAGS[app.rejectionReason]}
+              </span>
+            )}
+            <span className={cn("px-1 py-0 border text-[8px] uppercase shrink-0 font-bold tracking-tight", priority.badge)}>
+              {priority.label}
+            </span>
+          </div>
         </div>
       </div>
 

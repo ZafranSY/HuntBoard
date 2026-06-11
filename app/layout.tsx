@@ -20,12 +20,52 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
 })
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://job.zafran-sakowi.my'
 
 export const metadata: Metadata = {
-  title: 'HuntBoard Dashboard',
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: 'HuntBoard — Premium Job Application Tracker',
+    template: '%s | HuntBoard',
+  },
   description:
-    'A professional, results-oriented job application tracker. Manage your pipeline, resume versions, and application details.',
-  generator: 'v0.app',
+    'A state-of-the-art SWE Job Application Tracker. Manage your pipeline, track resume versions, and organize interview stages in a privacy-oriented dashboard.',
+  keywords: [
+    'Job application tracker',
+    'Kanban job tracker',
+    'Software engineer job search',
+    'Resume version tracker',
+    'Career dashboard',
+    'Job application pipeline',
+  ],
+  authors: [{ name: 'Zafran Sakowi', url: 'https://zafran-sakowi.my' }],
+  creator: 'Zafran Sakowi',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: baseUrl,
+    title: 'HuntBoard — Premium Job Application Tracker',
+    description:
+      'A state-of-the-art SWE Job Application Tracker. Manage your pipeline, track resume versions, and organize interview stages in a privacy-oriented dashboard.',
+    siteName: 'HuntBoard',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'HuntBoard — Premium Job Application Tracker',
+    description:
+      'A state-of-the-art SWE Job Application Tracker. Manage your pipeline, track resume versions, and organize interview stages in a privacy-oriented dashboard.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 }
 
 export const viewport: Viewport = {
