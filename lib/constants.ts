@@ -15,7 +15,7 @@ export const STATUS_META: Record<
     badge: "bg-chart-2/15 text-chart-2",
   },
   viewed: {
-    label: "Viewed",
+    label: "Responded",
     dot: "bg-chart-1",
     badge: "bg-chart-1/15 text-chart-1",
   },

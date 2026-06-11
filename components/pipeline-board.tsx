@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils"
 // 4 Simplified columns
 const KANBAN_COLUMNS = [
   { id: "applied", label: "Applied", dot: "bg-chart-2" },
+  { id: "responded", label: "Responded", dot: "bg-chart-1" },
   { id: "interview", label: "Interview", dot: "bg-chart-4" },
   { id: "offer", label: "Offer", dot: "bg-chart-3" },
-  { id: "rejected", label: "Rejected", dot: "bg-chart-5" },
 ] as const
 
 type KanbanStatus = typeof KANBAN_COLUMNS[number]["id"]
@@ -41,7 +41,10 @@ export function PipelineBoard({
           const items = applications.filter((a) => {
             const status = a.status
             if (col.id === "applied") {
-              return status === "wishlist" || status === "applied" || status === "viewed"
+              return status === "wishlist" || status === "applied"
+            }
+            if (col.id === "responded") {
+              return status === "viewed" || status === "rejected" || status === "ghosted"
             }
             if (col.id === "interview") {
               return (
@@ -53,9 +56,6 @@ export function PipelineBoard({
             }
             if (col.id === "offer") {
               return status === "offer" || status === "accepted"
-            }
-            if (col.id === "rejected") {
-              return status === "rejected" || status === "ghosted"
             }
             return false
           })

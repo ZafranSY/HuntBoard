@@ -135,12 +135,15 @@ export async function updateApplicationStatus(id: number, status: string) {
 
   if (!app) throw new Error("Application not found")
 
+  // Map Kanban status 'responded' to database status 'viewed'
+  const targetStatus = status === "responded" ? "viewed" : status
+
   const updates: Partial<typeof applications.$inferInsert> = {
-    status,
+    status: targetStatus,
     updatedAt: new Date(),
   }
 
-  if (status !== "wishlist" && !app.appliedDate) {
+  if (targetStatus !== "wishlist" && !app.appliedDate) {
     updates.appliedDate = new Date().toISOString().split("T")[0]
   }
 
