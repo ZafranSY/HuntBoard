@@ -1,57 +1,29 @@
 "use client"
 
-import type { Application, Resume, ApplicationStatus } from "@/lib/db/schema"
-import { APPLICATION_STATUSES } from "@/lib/db/schema"
-import {
-  STATUS_META,
-  PRIORITY_META,
-  formatSalary,
-} from "@/lib/constants"
+import type { Application, Resume } from "@/lib/db/schema"
+import { PRIORITY_META, formatSalary } from "@/lib/constants"
 import {
   deleteApplication,
   updateApplicationStatus,
 } from "@/app/actions/applications"
 import { ApplicationFormDialog } from "@/components/application-form-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   ExternalLink,
-  MapPin,
-  MoreVertical,
-  Pencil,
   Trash2,
-  GripVertical,
 } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
-const ACTIVE_COLUMNS: ApplicationStatus[] = [
-  "wishlist",
-  "applied",
-  "viewed",
-  "interview",
-  "technical_test",
-  "final_interview",
-  "offer",
-  "accepted",
-]
+// 4 Simplified columns
+const KANBAN_COLUMNS = [
+  { id: "applied", label: "Applied", dot: "bg-chart-2" },
+  { id: "interview", label: "Interview", dot: "bg-chart-4" },
+  { id: "offer", label: "Offer", dot: "bg-chart-3" },
+  { id: "rejected", label: "Rejected", dot: "bg-chart-5" },
+] as const
 
-const CLOSED_COLUMNS: ApplicationStatus[] = [
-  "rejected",
-  "ghosted",
-]
+type KanbanStatus = typeof KANBAN_COLUMNS[number]["id"]
 
 export function PipelineBoard({
   applications,
@@ -60,37 +32,40 @@ export function PipelineBoard({
   applications: Application[]
   resumes: Resume[]
 }) {
-  const [showClosed, setShowClosed] = useState(false)
-
-  const columns = showClosed
-    ? [...ACTIVE_COLUMNS, ...CLOSED_COLUMNS]
-    : ACTIVE_COLUMNS
-
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end gap-2 px-1">
-        <Switch
-          id="show-closed"
-          checked={showClosed}
-          onCheckedChange={setShowClosed}
-        />
-        <Label htmlFor="show-closed" className="text-xs text-muted-foreground cursor-pointer select-none">
-          Show Closed (Rejected / Ghosted)
-        </Label>
-      </div>
-
-      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-        {columns.map((status) => {
+    <div className="w-full">
+      {/* Scrollable board container */}
+      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent h-[calc(100vh-280px)] min-h-[500px]">
+        {KANBAN_COLUMNS.map((col) => {
+          // Group database statuses into the 4 columns
           const items = applications.filter((a) => {
-            if (status === "interview") {
-              return a.status === "interview" || a.status === "interviewing"
+            const status = a.status
+            if (col.id === "applied") {
+              return status === "wishlist" || status === "applied" || status === "viewed"
             }
-            return a.status === status
+            if (col.id === "interview") {
+              return (
+                status === "interview" ||
+                status === "technical_test" ||
+                status === "final_interview" ||
+                status === "interviewing"
+              )
+            }
+            if (col.id === "offer") {
+              return status === "offer" || status === "accepted"
+            }
+            if (col.id === "rejected") {
+              return status === "rejected" || status === "ghosted"
+            }
+            return false
           })
+
           return (
             <Column
-              key={status}
-              status={status}
+              key={col.id}
+              columnId={col.id}
+              label={col.label}
+              dot={col.dot}
               items={items}
               resumes={resumes}
             />
@@ -102,24 +77,29 @@ export function PipelineBoard({
 }
 
 function Column({
-  status,
+  columnId,
+  label,
+  dot,
   items,
   resumes,
 }: {
-  status: ApplicationStatus
+  columnId: KanbanStatus
+  label: string
+  dot: string
   items: Application[]
   resumes: Resume[]
 }) {
-  const meta = STATUS_META[status]
   const [pending, startTransition] = useTransition()
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault()
     const id = Number(e.dataTransfer.getData("text/plain"))
     if (!id) return
+    
     startTransition(async () => {
       try {
-        await updateApplicationStatus(id, status)
+        await updateApplicationStatus(id, columnId)
+        toast.success(`Moved to ${label}`)
       } catch {
         toast.error("Could not move card")
       }
@@ -131,23 +111,25 @@ function Column({
       onDragOver={(e) => e.preventDefault()}
       onDrop={onDrop}
       className={cn(
-        "flex w-72 shrink-0 flex-col gap-3 rounded-none border border-border bg-muted/10 p-3 transition-colors relative",
-        pending && "opacity-70",
+        "flex w-72 shrink-0 flex-col rounded-none border border-border bg-card/40 h-full relative overflow-hidden",
+        pending && "opacity-75"
       )}
     >
-      <div className="flex items-center justify-between px-1 border-b border-border/50 pb-2">
+      {/* Column Header - Sticky */}
+      <div className="flex items-center justify-between px-3 py-3 border-b border-border bg-background/80 backdrop-blur-xs z-10 shrink-0 select-none">
         <div className="flex items-center gap-2">
-          <span className={cn("h-2.5 w-2.5 rounded-none", meta.dot)} />
-          <span className="text-xs font-mono font-bold uppercase tracking-wider">{meta.label}</span>
+          <span className={cn("h-2 w-2 rounded-none shrink-0", dot)} />
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-foreground">{label}</span>
         </div>
-        <span className="rounded-none border border-border/60 bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground select-none">
+        <span className="rounded-none border border-border bg-muted/20 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
           {items.length}
         </span>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* Card List - Scrollable vertically */}
+      <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
         {items.length === 0 && (
-          <p className="px-1 py-8 text-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground/50 border border-dashed border-border/50 bg-card/40">
+          <p className="py-8 text-center text-[9px] font-mono uppercase tracking-widest text-muted-foreground/30 border border-dashed border-border/50 bg-muted/5 select-none">
             [DRAG_CARDS_HERE]
           </p>
         )}
@@ -168,9 +150,11 @@ function ApplicationCard({
 }) {
   const [pending, startTransition] = useTransition()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const priority = PRIORITY_META[app.priority as keyof typeof PRIORITY_META]
+  const priority = PRIORITY_META[app.priority as keyof typeof PRIORITY_META] || PRIORITY_META.medium
 
-  function onDelete() {
+  function onDelete(e: React.MouseEvent) {
+    e.stopPropagation() // Prevent opening the dialog
+    if (!confirm("Are you sure you want to delete this application?")) return
     startTransition(async () => {
       try {
         await deleteApplication(app.id)
@@ -181,108 +165,79 @@ function ApplicationCard({
     })
   }
 
+  // Format date or updatedAt date
+  const formattedDate = app.updatedAt
+    ? new Date(app.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : ""
+
   return (
     <div
       draggable
-      onDragStart={(e) =>
-          e.dataTransfer.setData("text/plain", String(app.id))
-      }
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", String(app.id))
+      }}
+      onClick={() => setIsEditDialogOpen(true)}
       className={cn(
-        "group flex flex-col gap-2.5 rounded-none border border-border bg-card p-3 shadow-none hover:border-primary/50 transition-colors relative overflow-hidden cursor-grab active:cursor-grabbing",
-        pending && "opacity-50",
+        "group flex flex-col gap-1 rounded-none border border-border bg-card p-2 hover:border-foreground/30 hover:bg-muted/10 transition-colors relative cursor-pointer select-none",
+        pending && "opacity-50"
       )}
     >
-      <div className="absolute inset-0 dot-matrix-mesh opacity-[0.03] pointer-events-none" />
-      <div className="flex items-start justify-between gap-2 relative z-10">
-        <div className="flex items-start gap-1.5">
-          <GripVertical className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors" />
-          <div className="flex flex-col">
-            <span className="text-xs font-bold leading-tight uppercase tracking-tight text-foreground">
-              {app.role}
-            </span>
-            <span className="text-[10px] font-mono text-muted-foreground/80 mt-0.5">{app.company}</span>
-          </div>
+      <div className="absolute inset-0 dot-matrix-mesh opacity-[0.02] pointer-events-none" />
+
+      {/* Header Line: Company */}
+      <div className="flex items-center justify-between gap-1.5 relative z-10">
+        <span className="text-[11px] font-mono font-bold leading-tight uppercase tracking-tight text-foreground truncate flex-1">
+          {app.company}
+        </span>
+        
+        {/* Quick Actions Hover-only */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          {app.link && (
+            <a
+              href={app.link}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="h-4 w-4 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+              title="Open posting"
+            >
+              <ExternalLink className="h-2.5 w-2.5" />
+            </a>
+          )}
+          <button
+            onClick={onDelete}
+            className="h-4 w-4 inline-flex items-center justify-center text-muted-foreground hover:text-destructive"
+            title="Delete Application"
+          >
+            <Trash2 className="h-2.5 w-2.5" />
+          </button>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0 rounded-none border border-transparent hover:border-border"
-                aria-label="Card actions"
-              >
-                <MoreVertical className="h-3.5 w-3.5" />
-              </Button>
-            }
-          />
-          <DropdownMenuContent align="end" className="rounded-none">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="text-[10px] font-mono uppercase tracking-wider">Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-border" />
-              <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)} className="rounded-none">
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              {app.link && (
-                <DropdownMenuItem className="rounded-none">
-                  <a
-                    href={app.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center w-full"
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Open posting
-                  </a>
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator className="bg-border" />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive rounded-none"
-                onClick={onDelete}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
+      {/* Role Title Line */}
+      <div className="text-[10px] font-mono text-muted-foreground truncate relative z-10">
+        {app.role}
+      </div>
+
+      {/* Footer Line: Salary / Date & Priority */}
+      <div className="flex justify-between items-center text-[9px] font-mono text-muted-foreground/40 mt-1 border-t border-border/20 pt-1 relative z-10">
+        <span>
+          {app.salaryMin || app.salaryMax 
+            ? formatSalary(app.salaryMin, app.salaryMax) 
+            : formattedDate}
+        </span>
+        <span className={cn("px-1 py-0 border text-[8px] uppercase shrink-0 font-bold tracking-tight", priority.badge)}>
+          {priority.label}
+        </span>
+      </div>
+
+      {/* Edit Form Dialog */}
       <ApplicationFormDialog
         resumes={resumes}
         application={app}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
       />
-
-      <div className="flex flex-wrap items-center gap-1.5 relative z-10">
-        <Badge variant="secondary" className={cn("text-[9px] font-mono rounded-none uppercase", priority.badge)}>
-          {priority.label}
-        </Badge>
-        {app.location && (
-          <span className="flex items-center gap-1 text-[10px] font-mono uppercase text-muted-foreground">
-            <MapPin className="h-3 w-3" />
-            {app.location}
-          </span>
-        )}
-      </div>
-
-      {/* Salary if present */}
-      {(app.salaryMin || app.salaryMax) && (
-        <span className="text-[10px] font-mono text-muted-foreground/80 relative z-10">
-          {formatSalary(app.salaryMin, app.salaryMax)}
-        </span>
-      )}
-
-      {app.nextAction && (
-        <div className="rounded-none bg-accent/40 px-2 py-1 text-[10px] font-mono border-l border-primary/30 relative z-10 text-muted-foreground">
-          <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block font-bold mb-0.5">Next Step</span>
-          {app.nextAction}
-        </div>
-      )}
     </div>
   )
 }
-
