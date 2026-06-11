@@ -39,7 +39,13 @@ import {
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { WishlistFormDialog } from "@/components/wishlist-form-dialog"
-import { claimWishlistItem, deleteWishlistItem, importWishlistItems } from "@/app/actions/wishlist"
+import {
+  claimWishlistItem,
+  deleteWishlistItem,
+  importWishlistItems,
+  renameWishlistCategory,
+  deleteWishlistCategory,
+} from "@/app/actions/wishlist"
 
 interface WishlistClientProps {
   currentNamespaceId: number
@@ -75,6 +81,11 @@ export function WishlistClient({
   const [customCategories, setCustomCategories] = useState<string[]>([])
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
+
+  // Edit Category State
+  const [editingCategory, setEditingCategory] = useState<string | null>(null)
+  const [editCategoryName, setEditCategoryName] = useState("")
+  const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false)
 
   // Edit/Dialog State
   const [editingItem, setEditingItem] = useState<WishlistItem | undefined>(undefined)
@@ -119,6 +130,82 @@ export function WishlistClient({
     setNewCategoryName("")
     setIsAddingCategory(false)
     toast.success(`Category "${trimmed}" added to filter list`)
+  }
+
+  const handleDeleteCategory = (cat: string) => {
+    if (
+      confirm(
+        `Are you sure you want to delete the category "${cat}"? This will clear the category from all jobs.`
+      )
+    ) {
+      startTransition(async () => {
+        try {
+          const updated = customCategories.filter((c) => c.toLowerCase() !== cat.toLowerCase())
+          setCustomCategories(updated)
+          localStorage.setItem("huntboard-wishlist-categories", JSON.stringify(updated))
+
+          await deleteWishlistCategory(cat)
+
+          if (selectedCategory.toLowerCase() === cat.toLowerCase()) {
+            setSelectedCategory("all")
+          }
+
+          toast.success(`Category "${cat}" deleted`)
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Delete failed")
+        }
+      })
+    }
+  }
+
+  const handleRenameCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmedOld = editingCategory ? editingCategory.trim() : ""
+    const trimmedNew = editCategoryName.trim()
+
+    if (!trimmedOld || !trimmedNew) return
+    if (trimmedOld.toLowerCase() === trimmedNew.toLowerCase()) {
+      setIsEditCategoryDialogOpen(false)
+      return
+    }
+
+    if (
+      trimmedNew.toLowerCase() === "all" ||
+      trimmedNew.toLowerCase() === "uncategorized" ||
+      customCategories.some(
+        (c) =>
+          c.toLowerCase() === trimmedNew.toLowerCase() &&
+          c.toLowerCase() !== trimmedOld.toLowerCase()
+      )
+    ) {
+      toast.error("Category already exists or is reserved.")
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        let updated = customCategories.map((c) =>
+          c.toLowerCase() === trimmedOld.toLowerCase() ? trimmedNew : c
+        )
+        if (!customCategories.some((c) => c.toLowerCase() === trimmedOld.toLowerCase())) {
+          updated.push(trimmedNew)
+        }
+        setCustomCategories(updated)
+        localStorage.setItem("huntboard-wishlist-categories", JSON.stringify(updated))
+
+        await renameWishlistCategory(trimmedOld, trimmedNew)
+
+        if (selectedCategory.toLowerCase() === trimmedOld.toLowerCase()) {
+          setSelectedCategory(trimmedNew.toLowerCase())
+        }
+
+        setIsEditCategoryDialogOpen(false)
+        setEditingCategory(null)
+        toast.success(`Category renamed to "${trimmedNew}"`)
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Rename failed")
+      }
+    })
   }
 
   // Calculate unique categories and job counts
@@ -407,20 +494,47 @@ export function WishlistClient({
               const isActive = selectedCategory.toLowerCase() === lower
 
               return (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(lower)}
-                  className={cn(
-                    "flex items-center justify-between px-3 py-2 text-xs font-mono text-left border rounded-none transition-colors w-full truncate",
-                    isActive
-                      ? "bg-foreground text-background border-foreground font-bold"
-                      : "border-transparent hover:bg-muted/40 text-muted-foreground hover:text-foreground"
-                  )}
-                  title={cat}
-                >
-                  <span className="truncate">[{lower}]</span>
-                  <span>({count})</span>
-                </button>
+                <div key={cat} className="group/cat flex items-center justify-between w-full">
+                  <button
+                    onClick={() => setSelectedCategory(lower)}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2 text-xs font-mono text-left border rounded-none transition-colors grow truncate",
+                      isActive
+                        ? "bg-foreground text-background border-foreground font-bold"
+                        : "border-transparent hover:bg-muted/40 text-muted-foreground hover:text-foreground"
+                    )}
+                    title={cat}
+                  >
+                    <span className="truncate">[{lower}]</span>
+                    <span className="shrink-0 ml-1">({count})</span>
+                  </button>
+                  
+                  {/* Category Actions on Hover */}
+                  <div className="hidden group-hover/cat:flex items-center bg-card border border-border border-l-0 shrink-0 select-none">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditingCategory(cat)
+                        setEditCategoryName(cat)
+                        setIsEditCategoryDialogOpen(true)
+                      }}
+                      className="p-1.5 text-muted-foreground hover:text-foreground border-r border-border h-8 w-8 flex items-center justify-center transition-colors"
+                      title="Rename Category"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteCategory(cat)
+                      }}
+                      className="p-1.5 text-muted-foreground hover:text-destructive h-8 w-8 flex items-center justify-center transition-colors"
+                      title="Delete Category"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
               )
             })}
           </div>
@@ -779,6 +893,51 @@ export function WishlistClient({
               Import Jobs
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Category Dialog */}
+      <Dialog open={isEditCategoryDialogOpen} onOpenChange={setIsEditCategoryDialogOpen}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-sm rounded-none border border-border bg-card">
+          <DialogHeader className="font-mono">
+            <DialogTitle className="uppercase text-sm font-bold tracking-wider">
+              [03_RENAME_CATEGORY]
+            </DialogTitle>
+            <DialogDescription className="text-[11px] uppercase text-muted-foreground">
+              Rename the category &quot;{editingCategory}&quot; across all items.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleRenameCategorySubmit} className="flex flex-col gap-4 font-mono text-xs">
+            <div>
+              <label className="block text-[10px] text-muted-foreground uppercase mb-1">Category Name</label>
+              <Input
+                value={editCategoryName}
+                onChange={(e) => setEditCategoryName(e.target.value)}
+                placeholder="New category name"
+                required
+                className="font-mono text-xs rounded-none bg-background border-border text-foreground focus-visible:ring-foreground focus-visible:ring-1"
+              />
+            </div>
+
+            <DialogFooter className="flex justify-end gap-2 border-t pt-4 border-border/40">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditCategoryDialogOpen(false)}
+                className="rounded-none font-mono text-xs uppercase"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="rounded-none bg-foreground text-background hover:bg-foreground/90 font-mono text-xs uppercase"
+              >
+                Rename
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

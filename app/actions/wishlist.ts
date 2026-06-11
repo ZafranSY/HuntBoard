@@ -169,3 +169,52 @@ export async function importWishlistItems(items: any[]) {
 
   revalidatePath("/wishlist")
 }
+
+export async function renameWishlistCategory(oldName: string, newName: string) {
+  await requireNamespaceId()
+
+  const trimmedOld = oldName.trim()
+  const trimmedNew = newName.trim()
+  if (!trimmedOld || !trimmedNew) {
+    throw new Error("Category names cannot be empty.")
+  }
+
+  // Update wishlist items
+  await db
+    .update(wishlist)
+    .set({ category: trimmedNew })
+    .where(eq(wishlist.category, trimmedOld))
+
+  // Also update applications
+  await db
+    .update(applications)
+    .set({ category: trimmedNew })
+    .where(eq(applications.category, trimmedOld))
+
+  revalidatePath("/wishlist")
+  revalidatePath("/dashboard")
+}
+
+export async function deleteWishlistCategory(categoryName: string) {
+  await requireNamespaceId()
+
+  const trimmed = categoryName.trim()
+  if (!trimmed) {
+    throw new Error("Category name cannot be empty.")
+  }
+
+  // Clear category on wishlist items
+  await db
+    .update(wishlist)
+    .set({ category: null })
+    .where(eq(wishlist.category, trimmed))
+
+  // Clear category on applications
+  await db
+    .update(applications)
+    .set({ category: null })
+    .where(eq(applications.category, trimmed))
+
+  revalidatePath("/wishlist")
+  revalidatePath("/dashboard")
+}
