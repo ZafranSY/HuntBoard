@@ -386,17 +386,27 @@ export function WishlistClient({
         return
       }
 
-      for (const it of items) {
+      // If a specific category is active, default the imported items to it if they don't specify one
+      const defaultCategory = (selectedCategory !== "all" && selectedCategory !== "uncategorized")
+        ? selectedCategory
+        : undefined
+
+      const itemsToImport = items.map((it) => {
         if (!it.company && !it.Company && !it.company_name) {
-          toast.error("Each item must contain at least a 'company' field.")
-          return
+          throw new Error("Each item must contain at least a 'company' field.")
         }
-      }
+        
+        const hasCategory = it.category || it.Category
+        if (!hasCategory && defaultCategory) {
+          return { ...it, category: defaultCategory }
+        }
+        return it
+      })
 
       startTransition(async () => {
         try {
-          await importWishlistItems(items)
-          toast.success(`Successfully imported ${items.length} jobs!`)
+          await importWishlistItems(itemsToImport)
+          toast.success(`Successfully imported ${itemsToImport.length} jobs!`)
           setIsImportDialogOpen(false)
           setJsonText("")
         } catch (err) {
@@ -404,7 +414,11 @@ export function WishlistClient({
         }
       })
     } catch (e) {
-      toast.error("Invalid JSON format. Check brackets and commas.")
+      toast.error(
+        e instanceof Error && !e.message.startsWith("Unexpected token")
+          ? e.message
+          : "Invalid JSON format. Check brackets and commas."
+      )
     }
   }
 
