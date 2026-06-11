@@ -97,3 +97,42 @@ You can batch import multiple job applications at once using the **Import JSON**
   }
 ]
 ```
+
+---
+
+## Wishlist Batch Import via JSON
+
+You can batch import jobs directly into your **Wishlist** board by clicking the **Import JSON** button on the Wishlist page.
+
+### Required Fields
+- `company` (string, required): The company name. Also accepts `Company` or `company_name`.
+
+### Optional Fields
+- `role` (string): Job title / role. Also accepts `Role`, `title`, or `position`.
+- `location` (string): Job location. Also accepts `Location`.
+- `category` (string): Category grouping. Also accepts `Category`.
+- `priority` (string): Options are `"low" | "medium" | "high"`. Defaults to `"medium"`. Also accepts `Priority`.
+- `link` (string): URL link to the job post. Also accepts `Link` or `url`.
+- `notes` (string): Any comments/notes. Also accepts `Notes`.
+
+### Example Wishlist Payload
+```json
+[
+  {
+    "company": "Netflix",
+    "role": "Frontend Architect",
+    "location": "Los Gatos, CA",
+    "category": "Streaming / Frontend",
+    "priority": "high",
+    "link": "https://netflix.com/jobs/123",
+    "notes": "Need to brush up on canvas performance optimization."
+  },
+  {
+    "company": "Linear",
+    "role": "Product Engineer",
+    "priority": "medium",
+    "category": "Productivity Tools"
+  }
+]
+```
+
