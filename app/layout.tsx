@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -54,6 +55,7 @@ export default function RootLayout({
           <Toaster richColors position="top-center" />
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || "G-7HZ8HEW529"} />
       </body>
     </html>
   )
