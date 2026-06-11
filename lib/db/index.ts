@@ -6,6 +6,10 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not defined in environment variables")
 }
 
-const sql = neon(process.env.DATABASE_URL)
+const sql = neon(process.env.DATABASE_URL, {
+  fetchOptions: {
+    cache: "no-store",
+  },
+})
 
 export const db = drizzle({ client: sql, schema })
