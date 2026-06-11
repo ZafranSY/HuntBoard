@@ -111,7 +111,7 @@ function Column({
       onDragOver={(e) => e.preventDefault()}
       onDrop={onDrop}
       className={cn(
-        "flex w-72 shrink-0 flex-col rounded-none border border-border bg-card/40 h-full relative overflow-hidden",
+        "flex flex-1 min-w-[240px] flex-col rounded-none border border-border bg-card/40 h-full relative overflow-hidden",
         pending && "opacity-75"
       )}
     >

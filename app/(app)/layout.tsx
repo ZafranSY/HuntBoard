@@ -33,7 +33,7 @@ export default async function DashboardLayout({
         applications={apps}
       />
       <main className="flex-1 md:pl-64 flex flex-col">
-        <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:py-8 grow">
+        <div className="w-full max-w-none px-6 py-6 lg:px-8 lg:py-8 grow">
           {children}
         </div>
       </main>
