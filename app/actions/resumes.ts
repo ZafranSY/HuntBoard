@@ -14,11 +14,19 @@ function toStr(v: FormDataEntryValue | null): string | null {
 
 export const getResumes = cache(async () => {
   const namespaceId = await requireNamespaceId()
-  return db
-    .select()
-    .from(resumes)
-    .where(eq(resumes.namespaceId, namespaceId))
-    .orderBy(desc(resumes.updatedAt))
+  try {
+    return await db
+      .select()
+      .from(resumes)
+      .where(eq(resumes.namespaceId, namespaceId))
+      .orderBy(desc(resumes.updatedAt))
+  } catch (err) {
+    console.error("DATABASE_ERROR in getResumes:", err)
+    if (err && typeof err === "object" && "cause" in err) {
+      console.error("DATABASE_ERROR_CAUSE:", err.cause)
+    }
+    throw err
+  }
 })
 
 export async function createResume(formData: FormData) {

@@ -21,11 +21,19 @@ function toStr(v: FormDataEntryValue | null): string | null {
 
 export const getApplications = cache(async () => {
   const namespaceId = await requireNamespaceId()
-  return db
-    .select()
-    .from(applications)
-    .where(eq(applications.namespaceId, namespaceId))
-    .orderBy(desc(applications.updatedAt))
+  try {
+    return await db
+      .select()
+      .from(applications)
+      .where(eq(applications.namespaceId, namespaceId))
+      .orderBy(desc(applications.updatedAt))
+  } catch (err) {
+    console.error("DATABASE_ERROR in getApplications:", err)
+    if (err && typeof err === "object" && "cause" in err) {
+      console.error("DATABASE_ERROR_CAUSE:", err.cause)
+    }
+    throw err
+  }
 })
 
 export async function createApplication(formData: FormData) {
