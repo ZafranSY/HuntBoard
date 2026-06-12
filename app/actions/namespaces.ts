@@ -25,8 +25,7 @@ export async function updateWeeklyGoal(goal: number) {
 
 export async function updateNamespaceSettings(
   displayName: string,
-  weeklyGoal: number,
-  color: string
+  weeklyGoal: number
 ) {
   const session = await requirePermission("owner")
   const namespaceId = session.namespaceId!
@@ -44,12 +43,10 @@ export async function updateNamespaceSettings(
     .set({
       displayName: trimmedName,
       weeklyGoal,
-      color,
     })
     .where(eq(namespaces.id, namespaceId))
 
   session.displayName = trimmedName
-  session.color = color
   await session.save()
 
   revalidatePath("/dashboard")

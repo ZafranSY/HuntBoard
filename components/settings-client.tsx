@@ -45,17 +45,6 @@ import {
 } from "@/app/actions/sharing"
 import { cn } from "@/lib/utils"
 
-const CURATED_COLORS = [
-  { name: "Indigo", value: "#6366f1" },
-  { name: "Emerald", value: "#10b981" },
-  { name: "Amber", value: "#f59e0b" },
-  { name: "Rose", value: "#f43f5e" },
-  { name: "Violet", value: "#8b5cf6" },
-  { name: "Sky Blue", value: "#0ea5e9" },
-  { name: "Orange", value: "#f97316" },
-  { name: "Slate", value: "#64748b" },
-  { name: "Charcoal", value: "#2d2d2d" },
-]
 
 interface SettingsClientProps {
   namespace: {
@@ -122,12 +111,6 @@ export function SettingsClient({
   // State for General Settings
   const [displayName, setDisplayName] = useState(namespace.displayName)
   const [weeklyGoal, setWeeklyGoal] = useState(namespace.weeklyGoal)
-  const [selectedColor, setSelectedColor] = useState(namespace.color)
-  const [customColor, setCustomColor] = useState(
-    CURATED_COLORS.some((c) => c.value.toLowerCase() === namespace.color.toLowerCase())
-      ? ""
-      : namespace.color
-  )
 
   // State for PIN forms
   const [pinInput, setPinInput] = useState("")
@@ -151,11 +134,10 @@ export function SettingsClient({
   // Handlers for General Settings
   const handleSaveGeneral = (e: React.FormEvent) => {
     e.preventDefault()
-    const finalColor = customColor && /^#[0-9a-fA-F]{6}$/.test(customColor) ? customColor : selectedColor
 
     startTransition(async () => {
       try {
-        await updateNamespaceSettings(displayName, Number(weeklyGoal), finalColor)
+        await updateNamespaceSettings(displayName, Number(weeklyGoal))
         toast.success("Settings updated successfully")
         router.refresh()
       } catch (err: any) {
@@ -427,61 +409,6 @@ export function SettingsClient({
                         className="rounded-none border-border/80 focus-visible:ring-primary/20 h-10 w-28 font-mono"
                       />
                       <span className="text-xs font-mono uppercase text-muted-foreground">applications / week</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="text-xs font-mono uppercase text-muted-foreground block">Board Accent Color</label>
-                    
-                    {/* Selected Indicator */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <div 
-                        className="h-6 w-6 border border-border" 
-                        style={{ backgroundColor: customColor || selectedColor }}
-                      />
-                      <span className="text-xs font-mono uppercase text-foreground/80 font-bold">
-                        Selected: {customColor || selectedColor}
-                      </span>
-                    </div>
-
-                    {/* Curated color grid */}
-                    <div className="grid grid-cols-5 sm:grid-cols-9 gap-2">
-                      {CURATED_COLORS.map((c) => (
-                        <button
-                          key={c.value}
-                          type="button"
-                          id={`color-${c.name.toLowerCase()}`}
-                          onClick={() => {
-                            setSelectedColor(c.value)
-                            setCustomColor("")
-                          }}
-                          className={cn(
-                            "h-9 w-full border border-border/80 relative flex items-center justify-center transition-all hover:scale-105",
-                            selectedColor === c.value && !customColor ? "ring-2 ring-primary ring-offset-2 scale-105" : ""
-                          )}
-                          style={{ backgroundColor: c.value }}
-                          title={c.name}
-                        >
-                          {selectedColor === c.value && !customColor && (
-                            <Check className="h-4 w-4 text-white mix-blend-difference" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Custom Hex field */}
-                    <div className="space-y-2 pt-2">
-                      <span className="text-[10px] font-mono uppercase text-muted-foreground block">Or custom Hex code:</span>
-                      <Input
-                        id="input-custom-color"
-                        type="text"
-                        placeholder="#6366f1"
-                        value={customColor}
-                        onChange={(e) => {
-                          setCustomColor(e.target.value)
-                        }}
-                        className="rounded-none border-border/80 focus-visible:ring-primary/20 h-9 font-mono w-40"
-                      />
                     </div>
                   </div>
 

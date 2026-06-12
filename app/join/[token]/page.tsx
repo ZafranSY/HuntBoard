@@ -57,7 +57,6 @@ export default async function JoinPage({ params }: PageProps) {
 
   // Fetch board details if link is valid
   let boardName = ""
-  let boardColor = ""
   if (isLinkValid && link) {
     const [board] = await db
       .select()
@@ -70,7 +69,6 @@ export default async function JoinPage({ params }: PageProps) {
       invalidReason = "The target board does not exist."
     } else {
       boardName = board.displayName
-      boardColor = board.color
     }
   }
 
@@ -109,7 +107,6 @@ export default async function JoinPage({ params }: PageProps) {
             <JoinForm
               token={token}
               boardName={boardName}
-              boardColor={boardColor}
               permission={link.permission as "viewer" | "contributor" | "editor"}
               isLoggedIn={isLoggedIn}
               currentUserName={currentUserName}

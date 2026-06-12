@@ -62,13 +62,9 @@ export function BoardSwitcher({ boards }: BoardSwitcherProps) {
             className={cn(
               "flex items-center justify-between p-3 border text-left font-mono transition-all duration-200 rounded-none relative group",
               board.isCurrent
-                ? "bg-[#2D2D2D]/5 dark:bg-[#EAE8E4]/5 text-foreground border-foreground/30 font-bold"
+                ? "bg-[#2D2D2D]/5 dark:bg-[#EAE8E4]/5 text-foreground border-foreground/30 border-l-4 border-l-foreground font-bold"
                 : "border-border/40 bg-background/50 hover:bg-background/80 hover:border-border text-muted-foreground hover:text-foreground cursor-pointer"
             )}
-            style={{
-              borderLeftWidth: board.isCurrent ? "4px" : "1px",
-              borderLeftColor: board.isCurrent ? board.color : undefined,
-            }}
           >
             <div className="flex flex-col gap-1 min-w-0 pr-2">
               <span className="text-xs font-bold truncate flex items-center gap-1.5">

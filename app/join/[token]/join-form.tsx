@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils"
 interface JoinFormProps {
   token: string
   boardName: string
-  boardColor: string
   permission: "viewer" | "contributor" | "editor"
   isLoggedIn: boolean
   currentUserName?: string
@@ -23,7 +22,6 @@ interface JoinFormProps {
 export function JoinForm({
   token,
   boardName,
-  boardColor,
   permission,
   isLoggedIn,
   currentUserName,
@@ -79,14 +77,11 @@ export function JoinForm({
       <div className="relative z-10 flex flex-col gap-6">
         <div className="flex flex-col gap-2 text-center sm:text-left">
           <span className="inline-flex w-fit items-center gap-1.5 rounded-none border border-border/80 bg-accent/40 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground mx-auto sm:mx-0">
-            <span 
-              className="h-2 w-2 shrink-0" 
-              style={{ backgroundColor: boardColor || "#6366f1" }} 
-            />
+            <span className="h-2 w-2 shrink-0 bg-foreground" />
             Invite to Join Board
           </span>
           <h1 className="text-balance text-2xl font-extrabold uppercase font-heading tracking-tight mt-1">
-            Join <span style={{ color: boardColor || "#6366f1" }}>{boardName}</span>
+            Join <span className="text-foreground">{boardName}</span>
           </h1>
           <p className="text-sm text-muted-foreground text-pretty">
             You have been invited to collaborate with the permission level of{" "}
