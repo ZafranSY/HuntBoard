@@ -3,10 +3,10 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
-import { LayoutDashboard, FileText, LogOut, Menu, X, Heart, BarChart3, Settings } from "lucide-react"
+import { LayoutDashboard, FileText, LogOut, Menu, X, Heart, BarChart3, Settings, ArrowLeft } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { logout } from "@/app/actions/auth"
+import { logout, exitCollaboratorBoard } from "@/app/actions/auth"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { GoalTracker } from "@/components/goal-tracker"
@@ -24,6 +24,7 @@ export function AppNav({
   applications,
   permission,
   sharedSections,
+  hasRegisteredBoard,
 }: {
   displayName: string
   weeklyGoal: number
@@ -33,6 +34,7 @@ export function AppNav({
   }[]
   permission?: "owner" | "editor" | "contributor" | "viewer"
   sharedSections?: string[]
+  hasRegisteredBoard?: boolean
 }) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
@@ -139,16 +141,41 @@ export function AppNav({
           </div>
           <ThemeToggle />
         </div>
-        <form action={logout} className="w-full">
-          <Button
-            type="submit"
-            variant="outline"
-            className="w-full justify-center gap-2 h-9 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5 transition-all duration-200 rounded-none"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            <span>Terminate Session</span>
-          </Button>
-        </form>
+        {permission && permission !== "owner" && hasRegisteredBoard ? (
+          <div className="flex flex-col gap-2 w-full">
+            <form action={exitCollaboratorBoard} className="w-full">
+              <Button
+                type="submit"
+                variant="outline"
+                className="w-full justify-center gap-2 h-9 font-mono text-[10px] uppercase tracking-wider text-foreground hover:bg-muted transition-all duration-200 rounded-none border-foreground/30 hover:border-foreground"
+              >
+                <ArrowLeft className="h-3.5 w-3.5 text-[#E82D2D]" />
+                <span>Exit Board</span>
+              </Button>
+            </form>
+            <form action={logout} className="w-full">
+              <Button
+                type="submit"
+                variant="ghost"
+                className="w-full justify-center gap-2 h-8 font-mono text-[9px] uppercase tracking-wider text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all duration-200 rounded-none"
+              >
+                <LogOut className="h-3 w-3" />
+                <span>Log Out Completely</span>
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <form action={logout} className="w-full">
+            <Button
+              type="submit"
+              variant="outline"
+              className="w-full justify-center gap-2 h-9 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5 transition-all duration-200 rounded-none"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>Terminate Session</span>
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   )

@@ -134,3 +134,35 @@ export async function logout() {
   session.destroy()
   redirect("/")
 }
+
+export async function exitCollaboratorBoard() {
+  const session = await getSession()
+  const ownBoardId = session.userNamespaceId
+  if (!ownBoardId) {
+    session.destroy()
+    redirect("/")
+  }
+
+  const [ownBoard] = await db
+    .select()
+    .from(namespaces)
+    .where(eq(namespaces.id, ownBoardId))
+    .limit(1)
+
+  if (!ownBoard || ownBoard.pinHash === null) {
+    session.destroy()
+    redirect("/")
+  }
+
+  session.namespaceId = ownBoard.id
+  session.namespaceSlug = ownBoard.slug
+  session.displayName = ownBoard.displayName
+  session.color = ownBoard.color
+  session.userNamespaceId = undefined
+  session.accessMethod = "pin"
+  session.permission = "owner"
+  session.sharedSections = undefined
+  await session.save()
+
+  redirect("/dashboard")
+}
