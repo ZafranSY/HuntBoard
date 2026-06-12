@@ -12,7 +12,7 @@ export default async function ResumesPage() {
 
   const [resumes, applications] = await Promise.all([
     getResumes(),
-    getApplications(),
+    isSectionAllowed(session, "dashboard") ? getApplications() : Promise.resolve([]),
   ])
 
   return <ResumesClient resumes={resumes} applications={applications} />

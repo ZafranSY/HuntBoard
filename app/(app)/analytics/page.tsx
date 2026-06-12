@@ -11,8 +11,8 @@ export default async function AnalyticsPage() {
   }
 
   const [applications, resumes] = await Promise.all([
-    getApplications(),
-    getResumes(),
+    isSectionAllowed(session, "dashboard") ? getApplications() : Promise.resolve([]),
+    isSectionAllowed(session, "resumes") ? getResumes() : Promise.resolve([]),
   ])
   return <AnalyticsClient applications={applications} resumes={resumes} />
 }

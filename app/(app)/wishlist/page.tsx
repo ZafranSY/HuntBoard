@@ -21,7 +21,7 @@ export default async function WishlistPage() {
     claims,
   ] = await Promise.all([
     db.select().from(namespaces),
-    getResumes(),
+    isSectionAllowed(session, "resumes") ? getResumes() : Promise.resolve([]),
     db
       .select()
       .from(wishlist)

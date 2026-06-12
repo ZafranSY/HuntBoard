@@ -14,7 +14,7 @@ export default async function DashboardPage() {
 
   const [applications, resumes, boards] = await Promise.all([
     getApplications(),
-    getResumes(),
+    isSectionAllowed(session, "resumes") ? getResumes() : Promise.resolve([]),
     getAccessibleBoards(),
   ])
 
