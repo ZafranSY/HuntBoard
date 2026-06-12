@@ -1,12 +1,18 @@
 import { and, desc, eq, isNotNull } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { applications, namespaces, wishlist } from "@/lib/db/schema"
-import { requireNamespaceId } from "@/lib/auth/session"
+import { getSession, isSectionAllowed } from "@/lib/auth/session"
 import { getResumes } from "@/app/actions/resumes"
 import { WishlistClient } from "@/components/wishlist-client"
+import { AccessRestricted } from "@/components/access-restricted"
 
 export default async function WishlistPage() {
-  const currentNamespaceId = await requireNamespaceId()
+  const session = await getSession()
+  if (!isSectionAllowed(session, "wishlist")) {
+    return <AccessRestricted />
+  }
+
+  const currentNamespaceId = session.namespaceId!
 
   const [
     allNamespaces,

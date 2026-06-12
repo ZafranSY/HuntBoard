@@ -16,7 +16,12 @@ function SubmitButton({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function AuthCard() {
+export interface AuthCardProps {
+  redirectTo?: string
+  defaultTab?: string
+}
+
+export function AuthCard({ redirectTo, defaultTab = "login" }: AuthCardProps) {
   const [signupState, signupAction, signupPending] = useActionState<
     AuthState,
     FormData
@@ -25,7 +30,7 @@ export function AuthCard() {
     AuthState,
     FormData
   >(login, undefined)
-  const [tab, setTab] = useState("login")
+  const [tab, setTab] = useState(defaultTab === "signup" ? "signup" : "login")
 
   return (
     <div className="w-full rounded-none border border-border bg-card p-6 shadow-none sm:p-8 relative overflow-hidden group">
@@ -38,6 +43,7 @@ export function AuthCard() {
 
         <TabsContent value="login" className="mt-6">
           <form action={loginAction} className="flex flex-col gap-4">
+            <input type="hidden" name="redirectTo" value={redirectTo ?? ""} />
             <div className="flex flex-col gap-2">
               <Label htmlFor="login-slug">Board name</Label>
               <Input
@@ -78,6 +84,7 @@ export function AuthCard() {
 
         <TabsContent value="signup" className="mt-6">
           <form action={signupAction} className="flex flex-col gap-4">
+            <input type="hidden" name="redirectTo" value={redirectTo ?? ""} />
             <div className="flex flex-col gap-2">
               <Label htmlFor="signup-name">Your board name</Label>
               <Input

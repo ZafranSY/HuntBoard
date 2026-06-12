@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { resumes } from "@/lib/db/schema"
-import { requireNamespaceId } from "@/lib/auth/session"
+import { requirePermission, requireSectionAccess } from "@/lib/auth/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { cache } from "react"
@@ -13,7 +13,9 @@ function toStr(v: FormDataEntryValue | null): string | null {
 }
 
 export const getResumes = cache(async () => {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("viewer")
+  await requireSectionAccess("resumes")
+  const namespaceId = session.namespaceId!
   try {
     return await db
       .select()
@@ -30,7 +32,9 @@ export const getResumes = cache(async () => {
 })
 
 export async function createResume(formData: FormData) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("editor")
+  await requireSectionAccess("resumes")
+  const namespaceId = session.namespaceId!
   const name = toStr(formData.get("name"))
   if (!name) throw new Error("Resume name is required.")
 
@@ -49,7 +53,9 @@ export async function createResume(formData: FormData) {
 }
 
 export async function updateResume(id: number, formData: FormData) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("editor")
+  await requireSectionAccess("resumes")
+  const namespaceId = session.namespaceId!
   await db
     .update(resumes)
     .set({
@@ -68,10 +74,13 @@ export async function updateResume(id: number, formData: FormData) {
 }
 
 export async function deleteResume(id: number) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("editor")
+  await requireSectionAccess("resumes")
+  const namespaceId = session.namespaceId!
   await db
     .delete(resumes)
     .where(and(eq(resumes.id, id), eq(resumes.namespaceId, namespaceId)))
   revalidatePath("/resumes")
   revalidatePath("/dashboard")
 }
+

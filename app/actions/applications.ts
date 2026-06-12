@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { applications, followUpLogs } from "@/lib/db/schema"
-import { requireNamespaceId } from "@/lib/auth/session"
+import { requirePermission, requireSectionAccess } from "@/lib/auth/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { cache } from "react"
@@ -24,7 +24,9 @@ function toBool(v: FormDataEntryValue | null): boolean {
 }
 
 export const getApplications = cache(async () => {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("viewer")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
   try {
     return await db
       .select()
@@ -41,7 +43,10 @@ export const getApplications = cache(async () => {
 })
 
 export async function createApplication(formData: FormData) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
   const company = toStr(formData.get("company"))
   const role = toStr(formData.get("role"))
   if (!company || !role) throw new Error("Company and role are required.")
@@ -54,6 +59,7 @@ export async function createApplication(formData: FormData) {
 
   await db.insert(applications).values({
     namespaceId,
+    createdBy: userNsId,
     company,
     role,
     location: toStr(formData.get("location")),
@@ -89,7 +95,10 @@ export async function createApplication(formData: FormData) {
 }
 
 export async function updateApplication(id: number, formData: FormData) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
   const status = toStr(formData.get("status")) ?? "wishlist"
 
   const [app] = await db
@@ -101,6 +110,10 @@ export async function updateApplication(id: number, formData: FormData) {
     .limit(1)
 
   if (!app) throw new Error("Application not found")
+
+  if (session.permission === "contributor" && app.createdBy !== userNsId) {
+    throw new Error("Forbidden: You can only edit your own applications.")
+  }
 
   let appliedDate = toStr(formData.get("appliedDate"))
   if (status !== "wishlist" && !appliedDate && !app.appliedDate) {
@@ -149,7 +162,10 @@ export async function updateApplication(id: number, formData: FormData) {
 }
 
 export async function updateApplicationStatus(id: number, status: string) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
 
   const [app] = await db
     .select()
@@ -160,6 +176,10 @@ export async function updateApplicationStatus(id: number, status: string) {
     .limit(1)
 
   if (!app) throw new Error("Application not found")
+
+  if (session.permission === "contributor" && app.createdBy !== userNsId) {
+    throw new Error("Forbidden: You can only edit your own applications.")
+  }
 
   // Map Kanban status 'responded' to database status 'viewed'
   const targetStatus = status === "responded" ? "viewed" : status
@@ -184,7 +204,9 @@ export async function updateApplicationStatus(id: number, status: string) {
 }
 
 export async function deleteApplication(id: number) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("editor")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
   await db
     .delete(applications)
     .where(
@@ -195,7 +217,10 @@ export async function deleteApplication(id: number) {
 }
 
 export async function importApplicationsFromJson(jsonText: string) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
   
   let data: any
   try {
@@ -277,6 +302,7 @@ export async function importApplicationsFromJson(jsonText: string) {
 
     parsedItems.push({
       namespaceId,
+      createdBy: userNsId,
       company,
       role,
       location: getOptionalStr(item.location),
@@ -303,7 +329,10 @@ export async function importApplicationsFromJson(jsonText: string) {
 }
 
 export async function addFollowUpLog(applicationId: number, formData: FormData) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
   
   const [app] = await db
     .select()
@@ -314,6 +343,10 @@ export async function addFollowUpLog(applicationId: number, formData: FormData) 
     .limit(1)
 
   if (!app) throw new Error("Application not found")
+
+  if (session.permission === "contributor" && app.createdBy !== userNsId) {
+    throw new Error("Forbidden: You can only add follow-ups to your own applications.")
+  }
 
   const method = toStr(formData.get("method"))
   if (!method) throw new Error("Method is required")
@@ -334,12 +367,16 @@ export async function addFollowUpLog(applicationId: number, formData: FormData) 
 }
 
 export async function deleteFollowUpLog(logId: number) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
 
   const [log] = await db
     .select({
       id: followUpLogs.id,
       applicationId: followUpLogs.applicationId,
+      createdBy: applications.createdBy,
     })
     .from(followUpLogs)
     .innerJoin(applications, eq(followUpLogs.applicationId, applications.id))
@@ -349,6 +386,10 @@ export async function deleteFollowUpLog(logId: number) {
     .limit(1)
 
   if (!log) throw new Error("Follow-up log not found or unauthorized")
+
+  if (session.permission === "contributor" && log.createdBy !== userNsId) {
+    throw new Error("Forbidden: You can only delete follow-ups on your own applications.")
+  }
 
   await db.delete(followUpLogs).where(eq(followUpLogs.id, logId))
 
@@ -360,12 +401,16 @@ export async function toggleFollowUpResponse(
   received: boolean,
   responseNote?: string
 ) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
 
   const [log] = await db
     .select({
       id: followUpLogs.id,
       applicationId: followUpLogs.applicationId,
+      createdBy: applications.createdBy,
     })
     .from(followUpLogs)
     .innerJoin(applications, eq(followUpLogs.applicationId, applications.id))
@@ -375,6 +420,10 @@ export async function toggleFollowUpResponse(
     .limit(1)
 
   if (!log) throw new Error("Follow-up log not found or unauthorized")
+
+  if (session.permission === "contributor" && log.createdBy !== userNsId) {
+    throw new Error("Forbidden: You can only edit follow-ups on your own applications.")
+  }
 
   await db
     .update(followUpLogs)
@@ -388,7 +437,9 @@ export async function toggleFollowUpResponse(
 }
 
 export async function getFollowUpLogs(applicationId: number) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("viewer")
+  await requireSectionAccess("dashboard")
+  const namespaceId = session.namespaceId!
 
   return db
     .select({

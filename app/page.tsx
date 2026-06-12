@@ -23,9 +23,20 @@ const FEATURES = [
   },
 ]
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirectTo?: string; tab?: string }>
+}) {
+  const { redirectTo, tab } = await searchParams
   const session = await getSession()
-  if (session.namespaceId) redirect("/dashboard")
+  if (session.namespaceId) {
+    if (redirectTo && redirectTo.startsWith("/")) {
+      redirect(redirectTo)
+    } else {
+      redirect("/dashboard")
+    }
+  }
 
   return (
     <main className="min-h-dvh">
@@ -88,7 +99,7 @@ export default async function HomePage() {
         </div>
 
         <div className="mx-auto w-full max-w-sm lg:max-w-none">
-          <AuthCard />
+          <AuthCard redirectTo={redirectTo} defaultTab={tab} />
         </div>
       </section>
     </main>

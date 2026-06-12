@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { wishlist, applications } from "@/lib/db/schema"
-import { requireNamespaceId } from "@/lib/auth/session"
+import { requirePermission, requireSectionAccess } from "@/lib/auth/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { cache } from "react"
@@ -13,6 +13,8 @@ function toStr(v: FormDataEntryValue | null): string | null {
 }
 
 export const getWishlistItems = cache(async () => {
+  await requirePermission("viewer")
+  await requireSectionAccess("wishlist")
   return db
     .select()
     .from(wishlist)
@@ -20,13 +22,16 @@ export const getWishlistItems = cache(async () => {
 })
 
 export async function createWishlistItem(formData: FormData) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("wishlist")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
   const company = toStr(formData.get("company"))
   const role = toStr(formData.get("role"))
   if (!company) throw new Error("Company name is required.")
 
   await db.insert(wishlist).values({
-    addedByNamespaceId: namespaceId,
+    addedByNamespaceId: userNsId,
     company,
     role,
     location: toStr(formData.get("location")),
@@ -40,7 +45,10 @@ export async function createWishlistItem(formData: FormData) {
 }
 
 export async function updateWishlistItem(id: number, formData: FormData) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("wishlist")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
 
   const [item] = await db
     .select()
@@ -49,6 +57,10 @@ export async function updateWishlistItem(id: number, formData: FormData) {
     .limit(1)
 
   if (!item) throw new Error("Wishlist item not found")
+
+  if (session.permission === "contributor" && item.addedByNamespaceId !== userNsId) {
+    throw new Error("Forbidden: You can only edit your own wishlist items.")
+  }
 
   await db
     .update(wishlist)
@@ -68,7 +80,10 @@ export async function updateWishlistItem(id: number, formData: FormData) {
 }
 
 export async function deleteWishlistItem(id: number) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("wishlist")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
 
   const [item] = await db
     .select()
@@ -77,8 +92,9 @@ export async function deleteWishlistItem(id: number) {
     .limit(1)
 
   if (!item) throw new Error("Wishlist item not found")
-  if (item.addedByNamespaceId !== namespaceId) {
-    throw new Error("You are not authorized to delete this item.")
+
+  if (session.permission === "contributor" && item.addedByNamespaceId !== userNsId) {
+    throw new Error("Forbidden: You can only delete your own wishlist items.")
   }
 
   await db.delete(wishlist).where(eq(wishlist.id, id))
@@ -87,7 +103,10 @@ export async function deleteWishlistItem(id: number) {
 }
 
 export async function claimWishlistItem(id: number, type: "apply" | "wishlist") {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("wishlist")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
 
   const [item] = await db
     .select()
@@ -122,6 +141,7 @@ export async function claimWishlistItem(id: number, type: "apply" | "wishlist") 
   } else {
     await db.insert(applications).values({
       namespaceId,
+      createdBy: userNsId,
       company: item.company,
       role: item.role ?? "Unknown Role",
       location: item.location,
@@ -140,7 +160,10 @@ export async function claimWishlistItem(id: number, type: "apply" | "wishlist") 
 }
 
 export async function importWishlistItems(items: any[]) {
-  const namespaceId = await requireNamespaceId()
+  const session = await requirePermission("contributor")
+  await requireSectionAccess("wishlist")
+  const namespaceId = session.namespaceId!
+  const userNsId = session.userNamespaceId ?? session.namespaceId!
 
   const valuesToInsert = items.map((item) => {
     const company = String(item.company || item.Company || item.company_name || "").trim()
@@ -152,7 +175,7 @@ export async function importWishlistItems(items: any[]) {
     const validPriority = ["low", "medium", "high"].includes(priority) ? priority : "medium"
 
     return {
-      addedByNamespaceId: namespaceId,
+      addedByNamespaceId: userNsId,
       company,
       role: String(item.role || item.Role || item.title || item.position || "").trim() || null,
       location: String(item.location || item.Location || "").trim() || null,
@@ -171,7 +194,9 @@ export async function importWishlistItems(items: any[]) {
 }
 
 export async function renameWishlistCategory(oldName: string, newName: string) {
-  await requireNamespaceId()
+  const session = await requirePermission("editor")
+  await requireSectionAccess("wishlist")
+  const namespaceId = session.namespaceId!
 
   const trimmedOld = oldName.trim()
   const trimmedNew = newName.trim()
@@ -179,41 +204,59 @@ export async function renameWishlistCategory(oldName: string, newName: string) {
     throw new Error("Category names cannot be empty.")
   }
 
-  // Update wishlist items
   await db
     .update(wishlist)
     .set({ category: trimmedNew })
-    .where(eq(wishlist.category, trimmedOld))
+    .where(
+      and(
+        eq(wishlist.category, trimmedOld),
+        eq(wishlist.addedByNamespaceId, namespaceId)
+      )
+    )
 
-  // Also update applications
   await db
     .update(applications)
     .set({ category: trimmedNew })
-    .where(eq(applications.category, trimmedOld))
+    .where(
+      and(
+        eq(applications.category, trimmedOld),
+        eq(applications.namespaceId, namespaceId)
+      )
+    )
 
   revalidatePath("/wishlist")
   revalidatePath("/dashboard")
 }
 
 export async function deleteWishlistCategory(categoryName: string) {
-  await requireNamespaceId()
+  const session = await requirePermission("editor")
+  await requireSectionAccess("wishlist")
+  const namespaceId = session.namespaceId!
 
   const trimmed = categoryName.trim()
   if (!trimmed) {
     throw new Error("Category name cannot be empty.")
   }
 
-  // Clear category on wishlist items
   await db
     .update(wishlist)
     .set({ category: null })
-    .where(eq(wishlist.category, trimmed))
+    .where(
+      and(
+        eq(wishlist.category, trimmed),
+        eq(wishlist.addedByNamespaceId, namespaceId)
+      )
+    )
 
-  // Clear category on applications
   await db
     .update(applications)
     .set({ category: null })
-    .where(eq(applications.category, trimmed))
+    .where(
+      and(
+        eq(applications.category, trimmed),
+        eq(applications.namespaceId, namespaceId)
+      )
+    )
 
   revalidatePath("/wishlist")
   revalidatePath("/dashboard")

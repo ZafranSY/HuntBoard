@@ -31,6 +31,8 @@ export default async function DashboardLayout({
         displayName={session.displayName ?? "My board"}
         weeklyGoal={ns?.weeklyGoal ?? 10}
         applications={apps}
+        permission={session.permission}
+        sharedSections={session.sharedSections}
       />
       <main className="flex-1 md:pl-64 flex flex-col">
         <div className="w-full max-w-none px-6 py-6 lg:px-8 lg:py-8 grow">

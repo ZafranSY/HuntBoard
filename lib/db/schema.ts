@@ -6,14 +6,18 @@ import {
   boolean,
   timestamp,
   date,
+  uuid,
+  jsonb,
 } from "drizzle-orm/pg-core"
 
 export const namespaces = pgTable("namespaces", {
   id: serial("id").primaryKey(),
   slug: text("slug").notNull().unique(),
   displayName: text("display_name").notNull(),
-  pinHash: text("pin_hash").notNull(),
+  pinHash: text("pin_hash"),
   weeklyGoal: integer("weekly_goal").notNull().default(10),
+  color: text("color").notNull().default("#6366f1"),
+  isPublic: boolean("is_public").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -59,6 +63,7 @@ export const wishlist = pgTable("wishlist", {
 export const applications = pgTable("applications", {
   id: serial("id").primaryKey(),
   namespaceId: integer("namespace_id").notNull(),
+  createdBy: integer("created_by").references(() => namespaces.id),
   company: text("company").notNull(),
   role: text("role").notNull(),
   location: text("location"),
@@ -109,11 +114,71 @@ export const followUpLogs = pgTable("follow_up_logs", {
   responseNote: text("response_note"),
 })
 
+// NEW: Shareable invite links
+export const shareLinks = pgTable('share_links', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  boardId: integer('board_id').notNull().references(() => namespaces.id, { onDelete: 'cascade' }),
+  createdBy: integer('created_by').notNull().references(() => namespaces.id), // who made the link
+  token: text('token').notNull().unique(),        // 32-char random token
+  linkName: text('link_name'),                    // optional label
+  
+  // Permissions
+  permission: text('permission').notNull(),       // 'viewer' | 'contributor' | 'editor'
+  
+  // Expiration
+  expiresAt: timestamp('expires_at', { withTimezone: true }),             // optional expiration
+  
+  // One-time use
+  maxUses: integer('max_uses'),                   // optional: null = unlimited, 1 = one-time
+  usedCount: integer('used_count').notNull().default(0),
+  
+  // Activity tracking
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),             // soft delete
+  sharedSections: jsonb('shared_sections').$type<string[]>(),
+  requireAccount: boolean('require_account').default(false).notNull(),
+});
+
+// NEW: Track who has access via link
+export const boardCollaborators = pgTable('board_collaborators', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  boardId: integer('board_id').notNull().references(() => namespaces.id, { onDelete: 'cascade' }),
+  collaboratorNamespaceId: integer('collaborator_namespace_id').notNull().references(() => namespaces.id), // the person who joined
+  
+  accessMethod: text('access_method').notNull(),  // 'pin' | 'link'
+  permission: text('permission').notNull(),       // 'viewer' | 'contributor' | 'editor'
+  
+  // If joined via link
+  joinedViaLinkId: uuid('joined_via_link_id').references(() => shareLinks.id),
+  
+  // Activity
+  joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),             // soft delete
+  lastActivityAt: timestamp('last_activity_at', { withTimezone: true }),  // track active collaborators
+  sharedSections: jsonb('shared_sections').$type<string[]>(),
+});
+
+// NEW: Activity log
+export const shareActivityLog = pgTable('share_activity_log', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  boardId: integer('board_id').notNull().references(() => namespaces.id, { onDelete: 'cascade' }),
+  actorNamespaceId: integer('actor_namespace_id').references(() => namespaces.id), // who did it
+  action: text('action').notNull(),               // 'link_created' | 'link_used' | 'link_revoked' | 'collaborator_removed' | 'permission_changed'
+  targetLinkId: uuid('target_link_id').references(() => shareLinks.id),
+  targetCollaboratorId: uuid('target_collaborator_id').references(() => boardCollaborators.id),
+  details: jsonb('details'),                      // details payload
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type Namespace = typeof namespaces.$inferSelect
 export type Resume = typeof resumes.$inferSelect
 export type Application = typeof applications.$inferSelect
 export type WishlistItem = typeof wishlist.$inferSelect
 export type FollowUpLog = typeof followUpLogs.$inferSelect
+export type ShareLink = typeof shareLinks.$inferSelect
+export type BoardCollaborator = typeof boardCollaborators.$inferSelect
+export type ShareActivityLog = typeof shareActivityLog.$inferSelect
 
 export const APPLICATION_STATUSES = [
   "wishlist",

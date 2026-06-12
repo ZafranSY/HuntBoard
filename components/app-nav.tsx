@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
-import { LayoutDashboard, FileText, LogOut, Menu, X, Heart, BarChart3 } from "lucide-react"
+import { LayoutDashboard, FileText, LogOut, Menu, X, Heart, BarChart3, Settings } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { logout } from "@/app/actions/auth"
@@ -22,6 +22,8 @@ export function AppNav({
   displayName,
   weeklyGoal,
   applications,
+  permission,
+  sharedSections,
 }: {
   displayName: string
   weeklyGoal: number
@@ -29,9 +31,22 @@ export function AppNav({
     status: string
     appliedDate: string | null
   }[]
+  permission?: "owner" | "editor" | "contributor" | "viewer"
+  sharedSections?: string[]
 }) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+
+  const visibleNav = NAV.filter((item) => {
+    if (permission === "owner") return true
+    if (!sharedSections) return true
+    const sectionName = item.href.replace("/", "")
+    return sharedSections.includes(sectionName)
+  })
+  if (permission === "owner" || permission === "editor") {
+    visibleNav.push({ href: "/settings", label: "Settings", icon: Settings })
+  }
+
 
   // Close drawer on path change
   useEffect(() => {
@@ -79,7 +94,7 @@ export function AppNav({
 
       {/* Nav Links */}
       <nav className="flex flex-col gap-1.5 px-4 py-6 grow relative z-10">
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const active = pathname === item.href
           return (
             <Link key={item.href} href={item.href} className="w-full">
